@@ -14,7 +14,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Metal Hive",
-  description: "This isa app for selling scrap metals",
+  description: "This is an app for selling scrap metals",
+  icons: {
+    icon: "/favicon.ico", 
+  },
 };
 
 export default function RootLayout({

@@ -47,9 +47,9 @@ const Navbar = () => {
           {/* Logo */}
           <Link href="/" className="text-2xl font-bold text-white">
             <Image
-              src="/logo.png"         // 👈 make sure this file is in /public
+              src="/logo.png"        
               alt="Metal Hive Logo"
-              width={120}              // 👈 adjust as needed
+              width={120}      
               height={120}
               className="object-contain"
             />
