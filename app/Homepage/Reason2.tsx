@@ -66,23 +66,24 @@ const Reason2: React.FC = () => {
   return (
     <div className="py-12 px-6 md:px-12 lg:px-20">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
-        <div className="">
-          <p className="font-extralight text-sm md:text-base text-[#17181A] mb-2">
-            The MetalHive Impact
-          </p>
-          <h2 className="text-xl md:text-2xl font-semibold mb-2">
-            Trusted by a Growing Network of Verified Traders
-          </h2>
-          <p className="font-extralight text-sm text-[#17181A] whitespace-nowrap overflow-x-auto">
-            Every connection, bid, and transaction on Metalhive is proof that the future of scrap metal trading is digital, compliant, and efficient.
-          </p>
-        </div>
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+  <div className="flex-1">
+    <p className="font-extralight text-sm md:text-base text-[#17181A] mb-2">
+      The MetalHive Impact
+    </p>
+    <h2 className="text-xl md:text-2xl font-semibold mb-2">
+      Trusted by a Growing Network of Verified Traders
+    </h2>
+    <p className="font-extralight text-sm md:text-base text-[#17181A]">
+      Every connection, bid, and transaction on MetalHive is proof that the future of scrap metal trading is digital, compliant, and efficient.
+    </p>
+  </div>
 
-        <button className="bg-[#C9A227] text-white hover:bg-white hover:text-[#C9A227] font-semibold px-5 py-2.5 md:px-6 md:py-3 rounded-lg transition w-full md:w-auto">
-          Get Started
-        </button>
-      </div>
+  <button className="bg-[#C9A227] text-white hover:bg-white hover:text-[#C9A227] font-semibold px-5 py-2.5 md:px-6 md:py-3 rounded-lg transition w-full md:w-auto">
+    Get Started
+  </button>
+</div>
+
 
       {/* Horizontal Scroll Cards Section */}
       <div className="relative">
