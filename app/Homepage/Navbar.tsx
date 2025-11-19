@@ -70,9 +70,12 @@ const Navbar = () => {
 
           {/* Right Button */}
           <div className="hidden md:block">
+            <Link href={"/auth"}>
             <button className=" hover:bg-[#C9A227] text-black hover:text-white bg-white font-semibold px-4 py-2 rounded-lg transition">
               Get Started
             </button>
+            </Link>
+            
           </div>
 
           {/* Mobile Menu Button */}
