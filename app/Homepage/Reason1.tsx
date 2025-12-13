@@ -1,4 +1,4 @@
-import React from "react";
+"use client"
 import { AiOutlineSafetyCertificate } from "react-icons/ai";
 import { FaRegEye } from "react-icons/fa6";
 import { IoMdWallet } from "react-icons/io";

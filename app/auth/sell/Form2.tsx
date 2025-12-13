@@ -3,17 +3,21 @@ import { useState } from "react"
 import { IoArrowBack } from "react-icons/io5"
 import { AiOutlineUpload } from "react-icons/ai"
 import { useFormStore } from "@/app/stores/FormStore"
+import { useRouter } from "next/navigation"
 
 interface Form2Props {
   onComplete?: () => void
   onBack?: () => void
 }
-const Form2: React.FC<Form2Props> = ({onComplete, onBack}) => {
+
+const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
   const { formData, updateFormData } = useFormStore()
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const router = useRouter()
 
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, files } = e.target as any
     if (files) {
       updateFormData({ [name]: files[0] })
@@ -25,11 +29,10 @@ const Form2: React.FC<Form2Props> = ({onComplete, onBack}) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validation
     const newErrors: { [key: string]: string } = {}
-    if (!formData.businessType) newErrors.businessType = "Business Type is required"
-    if (!formData.address) newErrors.address = "Address is required"
-    if (!formData.description) newErrors.description = "Description is required"
+    if (!formData.BusinessType) newErrors.BusinessType = "Business Type is required"
+    if (!formData.Address) newErrors.Address = "Address is required"
+    if (!formData.Description) newErrors.Description = "Description is required"
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -38,16 +41,20 @@ const Form2: React.FC<Form2Props> = ({onComplete, onBack}) => {
 
     setErrors({})
     console.log("All form data:", formData) // ready to submit to backend
-    if (onComplete) onComplete()
+
+    if (onComplete) {
+      onComplete()
+    } else {
+      router.push("/sellerDashBoard")
+    }
   }
 
- 
-
+  // Map labels to store keys explicitly
   const fields = [
-    { label: "Business Type", type: "select", options: ["LLC", "Sole Proprietorship", "Partnership", "Corporation"] },
-    { label: "Address", type: "text" },
-    { label: "Upload Company Logo", type: "file" },
-    { label: "Description", type: "textarea" },
+    { label: "Business Type", type: "select", key: "BusinessType", options: ["LLC", "Sole Proprietorship", "Partnership", "Corporation"] },
+    { label: "Address", type: "text", key: "Address" },
+    { label: "Upload Company Logo", type: "file", key: "logo" },
+    { label: "Description", type: "textarea", key: "Description" },
   ]
 
   return (
@@ -64,26 +71,25 @@ const Form2: React.FC<Form2Props> = ({onComplete, onBack}) => {
         <p className="text-[#737780] mb-6">Add a few details so buyers can trust your listings.</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col space-y-6">
-          {fields.map(({ label, type, options }) => {
-            const name = label.replace(/\s+/g, "")
-            const value = formData[name as keyof typeof formData] as string | File | null
+          {fields.map(({ label, type, key, options }) => {
+            const value = formData[key as keyof typeof formData]
 
             return (
-              <label key={label} className="block border bg-[#F6F6F6] border-[#F6F6F6] rounded-2xl text-md text-gray-600">
+              <label key={key} className="block border bg-[#F6F6F6] border-[#F6F6F6] rounded-2xl text-md text-gray-600">
                 <div className="mb-2 text-lg pt-2 pl-2 font-medium">{label}</div>
                 <div className="bg-white p-4">
                   {type === "file" ? (
                     <div>
                       <input
                         type="file"
-                        name={name}
-                        id={name}
+                        name={key}
+                        id={key}
                         accept="image/*"
                         onChange={handleChange}
                         className="hidden"
                       />
                       <label
-                        htmlFor={name}
+                        htmlFor={key}
                         className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl px-4 py-3 cursor-pointer"
                       >
                         <AiOutlineUpload size={20} /> Upload Company Logo
@@ -103,11 +109,11 @@ const Form2: React.FC<Form2Props> = ({onComplete, onBack}) => {
                     </div>
                   ) : type === "select" ? (
                     <select
-                      name={name}
-                      value={value as string}
+                      name={key}
+                      value={(value as string) ?? ""}
                       onChange={handleChange}
                       className={`w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 ${
-                        errors[name] ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
+                        errors[key] ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
                       }`}
                     >
                       <option value="">Select type</option>
@@ -119,28 +125,28 @@ const Form2: React.FC<Form2Props> = ({onComplete, onBack}) => {
                     </select>
                   ) : type === "textarea" ? (
                     <textarea
-                      name={name}
-                      value={value as string}
+                      name={key}
+                      value={(value as string) ?? ""}
                       onChange={handleChange}
                       placeholder="Describe the project, be as detailed as possible"
                       className={`w-full bg-white border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 ${
-                        errors[name] ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
+                        errors[key] ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
                       }`}
                       rows={4}
                     />
                   ) : (
                     <input
                       type="text"
-                      name={name}
-                      value={value as string}
+                      name={key}
+                      value={(value as string) ?? ""}
                       onChange={handleChange}
                       placeholder={label}
                       className={`w-full bg-white border rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                        errors[name] ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
+                        errors[key] ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
                       }`}
                     />
                   )}
-                  {errors[name] && <p className="text-red-500 text-sm mt-1">{errors[name]}</p>}
+                  {errors[key] && <p className="text-red-500 text-sm mt-1">{errors[key]}</p>}
                 </div>
               </label>
             )

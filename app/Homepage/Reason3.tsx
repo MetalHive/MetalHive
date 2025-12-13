@@ -1,3 +1,4 @@
+"use client"
 import { IoLogoTwitter } from "react-icons/io5";
 const Reason3 = () => {
     const testimonials = [

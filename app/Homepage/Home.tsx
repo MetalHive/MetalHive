@@ -1,4 +1,4 @@
-import React from 'react'
+"use client"
 import Hero from './Hero'
 import Companies from './Companies'
 import Tables from './Tables'
@@ -11,17 +11,17 @@ import Footer from './Footer'
 
 const Home = () => {
   return (
-  <>
-  <Hero />
-  <Companies />
-  <Tables />
-  <Impact />
-  <Trusted />
-  <Reason1 />
-  <Reason2 />
-  <Reason3 />
-  <Footer />
-  </>
+    <>
+      <Hero />
+      <Companies />
+      <Tables />
+      <Impact />
+      <Trusted />
+      <Reason1 />
+      <Reason2 />
+      <Reason3 />
+      <Footer />
+    </>
   )
 }
 

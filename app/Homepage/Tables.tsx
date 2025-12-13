@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+// import Image from "next/image";
 import {
   BarChart,
   Bar,
@@ -14,7 +14,7 @@ import {
 
 const data = [
   { company: "ASM", amount: 10000 },
-  { company: "KAM", amount: 6120.21 },
+  { company: "KAM", amount: 6120.21 },    
   { company: "Metec", amount: 3000 },
 ];
 

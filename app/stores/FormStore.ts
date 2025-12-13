@@ -6,10 +6,10 @@ interface FormData {
   email: string
   password: string
   phone: string
-  businessType: string
-  address: string
-  logo: File | null
-  description: string
+  BusinessType: string
+  Address: string
+UploadCompanyLogo: File | null
+  Description: string
 }
 
 interface FormStore {
@@ -23,10 +23,10 @@ export const useFormStore = create<FormStore>((set) => ({
     email: "",
     password: "",
     phone: "",
-    businessType: "",
-    address: "",
-    logo: null,
-    description: "",
+    BusinessType: "",
+    Address: "",
+    UploadCompanyLogo:  null,
+    Description: "",
   },
   updateFormData: (data) =>
     set((state) => ({ formData: { ...state.formData, ...data } })),
