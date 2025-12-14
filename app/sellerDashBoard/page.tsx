@@ -10,6 +10,7 @@ import { LuCalendarRange } from "react-icons/lu";
 import { FiTag, FiInbox, FiShoppingCart, FiDollarSign } from "react-icons/fi";
 import FeatureCards from "../Components/FeatureCards";
 import SellerDashboardTable from "./SellerDashboardTable";
+import Link from "next/link";
 
 
 const page = () => {
@@ -70,10 +71,10 @@ const page = () => {
                 )}
               </div>
 
-              <button className="flex items-center bg-[#C9A227] gap-2 px-4 py-2 rounded-md text-white text-md font-semibold">
+              <Link href={'/create-listing'} className="flex items-center bg-[#C9A227] gap-2 px-4 py-2 rounded-md text-white text-md font-semibold">
                 <FiPlus className="text-white" size={20} />
                 Create Listing
-              </button>
+              </Link>
             </div>
           </div>
         </div>

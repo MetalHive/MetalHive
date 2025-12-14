@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Package, Eye, User, ArrowRight } from 'lucide-react';
 
 export default function FeatureCards() {
@@ -8,6 +9,7 @@ export default function FeatureCards() {
       title: "Create Listing",
       description: "Add new scrap materials for sale",
       action: "Add new listing",
+      href: "/create-listing", // <-- page link
       bgColor: "bg-amber-50",
       iconColor: "text-amber-600"
     },
@@ -16,6 +18,7 @@ export default function FeatureCards() {
       title: "View Bids",
       description: "Check offers and respond quickly",
       action: "Check Bids",
+      href: "/view-bids", // <-- page link
       bgColor: "bg-amber-50",
       iconColor: "text-amber-600"
     },
@@ -24,6 +27,7 @@ export default function FeatureCards() {
       title: "Edit Profile",
       description: "Update your account or contact info",
       action: "Update Profile",
+      href: "/edit-profile", // <-- page link
       bgColor: "bg-amber-50",
       iconColor: "text-amber-600"
     }
@@ -54,32 +58,33 @@ export default function FeatureCards() {
   );
 }
 
-function FeatureCard({ feature }:any) {
+function FeatureCard({ feature }: any) {
   const Icon = feature.icon;
   
   return (
-    <div className=" p-2  transition-shadow">
+    <div className="p-2 transition-shadow hover:shadow-lg rounded-lg cursor-pointer">
       <div className="flex gap-2">
-        <div className={`${feature.bgColor} w-12 h-12 rounded-lg  mb-4 flex justify-center items-center`}>
-        <Icon className={`${feature.iconColor} w-6 h-6`} />
+        <div className={`${feature.bgColor} w-12 h-12 rounded-lg mb-4 flex justify-center items-center`}>
+          <Icon className={`${feature.iconColor} w-6 h-6`} />
+        </div>
+
+        <div>
+         
+            <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-amber-600 transition-colors">
+              {feature.title}
+            </h3>
+         
+
+          <p className="text-sm text-gray-600 mb-4">
+            {feature.description}
+          </p>
+
+          <Link href={feature.href}  className="flex items-center text-sm font-medium text-gray-900 hover:text-amber-600 transition-colors group">
+            {feature.action}
+            <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
       </div>
-      
-     <div>
-       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-        {feature.title}
-      </h3>
-        <p className="text-sm text-gray-600 mb-4">
-        {feature.description}
-      </p>
-      
-      <button className="flex items-center text-sm font-medium text-gray-900 hover:text-amber-600 transition-colors group">
-        {feature.action}
-        <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-      </button>
-     </div>
-      </div>
-      
-    
     </div>
   );
 }
