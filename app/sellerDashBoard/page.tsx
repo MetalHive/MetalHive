@@ -71,7 +71,7 @@ const page = () => {
                 )}
               </div>
 
-              <Link href={'/create-listing'} className="flex items-center bg-[#C9A227] gap-2 px-4 py-2 rounded-md text-white text-md font-semibold">
+              <Link href={'/sellerDashBoard/create-listing'} className="flex items-center bg-[#C9A227] gap-2 px-4 py-2 rounded-md text-white text-md font-semibold">
                 <FiPlus className="text-white" size={20} />
                 Create Listing
               </Link>

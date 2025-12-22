@@ -9,7 +9,7 @@ export default function FeatureCards() {
       title: "Create Listing",
       description: "Add new scrap materials for sale",
       action: "Add new listing",
-      href: "/create-listing", // <-- page link
+      href: "/sellerDashBoard/create-listing", // <-- page link
       bgColor: "bg-amber-50",
       iconColor: "text-amber-600"
     },
@@ -18,7 +18,7 @@ export default function FeatureCards() {
       title: "View Bids",
       description: "Check offers and respond quickly",
       action: "Check Bids",
-      href: "/view-bids", // <-- page link
+      href: "/sellerDashBoard/Bids", // <-- page link
       bgColor: "bg-amber-50",
       iconColor: "text-amber-600"
     },
@@ -27,7 +27,7 @@ export default function FeatureCards() {
       title: "Edit Profile",
       description: "Update your account or contact info",
       action: "Update Profile",
-      href: "/edit-profile", // <-- page link
+      href: "/sellerDashBoard/edit-profile", // <-- page link
       bgColor: "bg-amber-50",
       iconColor: "text-amber-600"
     }

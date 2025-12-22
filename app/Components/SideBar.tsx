@@ -64,7 +64,7 @@ export default function MetalhiveSidebar() {
 
             {/* Listings */}
             <a
-              href="Listing"
+              href="/sellerDashBoard/Listing"
               className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors group"
             >
               <Grid className="text-gray-600 group-hover:text-gray-900" size={24} />
@@ -73,7 +73,7 @@ export default function MetalhiveSidebar() {
 
             {/* Bids */}
             <a
-              href="#bids"
+              href="/sellerDashBoard/Bids"
               className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors group"
             >
               <Tag className="text-gray-600 group-hover:text-gray-900" size={24} />
@@ -82,7 +82,7 @@ export default function MetalhiveSidebar() {
 
             {/* Wallet */}
             <a
-              href="#wallet"
+              href="/sellerDashBoard/wallet"
               className="flex items-center justify-between gap-4 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors group"
             >
               <div className="flex items-center gap-4">

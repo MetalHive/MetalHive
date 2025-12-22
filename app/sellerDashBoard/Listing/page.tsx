@@ -1,5 +1,5 @@
 import React from 'react'
-import SideBar from '../Components/SideBar'
+import SideBar from '../../Components/SideBar'
 import ListingsDashboard from './ListingsDashboard'
 const page = () => {
   return (
