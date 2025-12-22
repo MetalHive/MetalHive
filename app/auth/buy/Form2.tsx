@@ -3,11 +3,13 @@
 import { useState } from "react"
 import { IoArrowBack } from "react-icons/io5"
 import { useBuyerFormStore } from "@/app/stores/BuyerStore"
+import { useRouter } from "next/navigation"
 
 interface Form2Props {
   onComplete?: () => void
   onBack?: () => void
 }
+const router = useRouter()
 
 const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
   const { buyerData, updateBuyerData } = useBuyerFormStore()
@@ -32,24 +34,29 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
   }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const newErrors: { [key: string]: string } = {}
+  e.preventDefault()
 
-    // Validate required fields (all except file upload)
-    if (!buyerData.companyName) newErrors.companyName = "Company Name is required"
-    if (!buyerData.registrationNumber) newErrors.registrationNumber = "Registration Number is required"
-    if (!buyerData.companyAddress) newErrors.companyAddress = "Company Address is required"
-    if (!buyerData.contactPerson.name) newErrors.contactPersonName = "Contact Person Name is required"
-    if (!buyerData.contactPerson.position) newErrors.contactPersonPosition = "Contact Person Position is required"
+  const newErrors: { [key: string]: string } = {}
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
-    }
+  // Validate required fields
+  if (!buyerData.companyName) newErrors.companyName = "Company Name is required"
+  if (!buyerData.registrationNumber) newErrors.registrationNumber = "Registration Number is required"
+  if (!buyerData.companyAddress) newErrors.companyAddress = "Company Address is required"
+  if (!buyerData.contactPerson.name) newErrors.contactPersonName = "Contact Person Name is required"
+  if (!buyerData.contactPerson.position) newErrors.contactPersonPosition = "Contact Person Position is required"
 
-    setErrors({})
-    if (onComplete) onComplete()
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors)
+    return
   }
+
+  setErrors({})
+
+  if (onComplete) onComplete()
+
+  router.push("/buyersDashboard")
+}
+
 
 
   return (

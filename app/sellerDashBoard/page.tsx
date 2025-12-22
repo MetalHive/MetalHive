@@ -11,7 +11,7 @@ import { FiTag, FiInbox, FiShoppingCart, FiDollarSign } from "react-icons/fi";
 import FeatureCards from "../Components/FeatureCards";
 import SellerDashboardTable from "./SellerDashboardTable";
 import Link from "next/link";
-
+import { sellerSidebarLinks } from "../lib/sidebarConfig";
 
 const page = () => {
   const [open, setOpen] = useState(false);
@@ -20,7 +20,7 @@ const page = () => {
   return (
 
     <div className="flex min-h-screen">
-      <SideBar />
+      <SideBar links={sellerSidebarLinks}/>
       <div className="flex-1 p-6 mt-16 lg:mt-0 w-full">
 
         {/* HEADER */}
