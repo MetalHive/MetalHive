@@ -1,7 +1,7 @@
 'use client'
 
 import SideBar from '@/app/Components/SideBar'
-import TopBar from '@/app/Components/Topbar'
+import TopBar from './components/Topbar'
 import { buyerSidebarLinks } from '../lib/sidebarConfig'
 export default function BuyersDashboardLayout({
   children,

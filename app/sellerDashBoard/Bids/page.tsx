@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import SideBar from '../../Components/SideBar'
+import SideBar from '@/app/Components/SideBar'
 import { Search } from "lucide-react"
 import Link from 'next/link'
 interface Listing {
