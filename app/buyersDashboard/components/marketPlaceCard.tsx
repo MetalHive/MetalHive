@@ -29,13 +29,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
         setCurrentImageIndex(index);
     };
 
-    const handleCardClick = () => {
-        router.push(`/buyersDashboard/Marketplace/${id}`);
-    };
+   
 
     return (
         <div
-            onClick={handleCardClick}
+            
             className="w-full rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
         >
             {/* Image Carousel */}
@@ -52,7 +50,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         <button
                             key={index}
                             onClick={(e) => {
-                                e.stopPropagation(); // prevent navigating when clicking dot
+                                e.stopPropagation(); 
                                 goToSlide(index);
                             }}
                             className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentImageIndex

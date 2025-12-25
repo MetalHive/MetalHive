@@ -1,7 +1,7 @@
-
+'use client'
 import ProductCard from '../components/marketPlaceCard';
 import SearchFilterBar from '../components/filterMarket'
-
+import Link from 'next/link'
 const page = () => {
      const sampleProducts = [
   {id:'1',
@@ -105,11 +105,18 @@ const page = () => {
 
   {/* Product Grid */}
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-    {sampleProducts.map((product, index) => (
-       
-        <ProductCard key={index} {...product} />
-   
-    ))}
+    {sampleProducts.map((product) => (
+    <Link
+        key={product.id}
+        href={`/buyersDashboard/Marketplace/${product.id}`}
+        className="block"
+        onClick={(e) => {
+            console.log('Link clicked:', product.id); // Debug log
+        }}
+    >
+        <ProductCard {...product} />
+    </Link>
+))}
   </div>
 </div>
     </div>
