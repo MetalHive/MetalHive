@@ -100,7 +100,7 @@ const MarketPlace = () => {
                 {sampleProducts.map((product) => (
                     <Link
                         key={product.id}
-                        href={`/buyersDashboard/marketplace/${product.id}`}
+                        href={`/buyersDashboard/Marketplace/${product.id}`}
                         className="block"
                     >
                         <ProductCard {...product} />

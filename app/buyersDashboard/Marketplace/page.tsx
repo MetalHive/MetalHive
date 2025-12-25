@@ -1,7 +1,7 @@
 
 import ProductCard from '../components/marketPlaceCard';
 import SearchFilterBar from '../components/filterMarket'
-import Link from 'next/link';
+
 const page = () => {
      const sampleProducts = [
   {id:'1',

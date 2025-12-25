@@ -1,11 +1,12 @@
-import React from 'react'
+'use client'
 import SideBar from '../../Components/SideBar'
 import ListingsDashboard from './ListingsDashboard'
+import { sellerSidebarLinks } from '@/app/lib/sidebarConfig'
 const page = () => {
   return (
    
     <div className="flex min-h-screen">
-        <SideBar />
+        <SideBar links={sellerSidebarLinks}/>
    <div className="flex-1 p-6 mt-16 lg:mt-0 w-full">
     <div className="w-full ">
       <div className="max-w-7xl mx-auto px-6 py-8">
