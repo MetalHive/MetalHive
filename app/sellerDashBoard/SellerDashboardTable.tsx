@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
 import AccordionSection from "../Components/AccordionSection";
+import { useListings } from "../hooks/useApi";
 
 interface Listing {
   id: string;
@@ -22,25 +23,43 @@ const SellerDashboardTable = () => {
   const [activeTab, setActiveTab] = useState<"Active" | "Sold" | "Inactive" | null>("Active");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const listings: Listing[] = [
-    { id: "1", image: "/bid1.png", name: "Copper Scrap Bundle", type: "Copper", size: "200KG", quantity: 2, bids: 12, price: 26.35, status: "Inactive" },
-    { id: "2", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop", name: "Nike Air Jordan", color: "Black", size: "23", quantity: 2, bids: 0, price: 26.35, paymentMethod: "Credit card", status: "Active" },
-    { id: "3", image: "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=100&h=100&fit=crop", name: "Nike Air Jordan Reflex", color: "Black", size: "23", quantity: 2, bids: 0, price: 26.35, paymentMethod: "Credit card", status: "Active" },
-    { id: "4", image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&h=100&fit=crop", name: "Nike Air Jordan Reflex", color: "Black", size: "23", quantity: 2, bids: 0, price: 26.35, paymentMethod: "Credit card", status: "Active" },
-    { id: "5", image: "https://images.unsplash.com/photo-1518640467707-6811f4a6ab73?w=100&h=100&fit=crop", name: "Copper Scrap Bundle", type: "Copper", size: "200KG", quantity: 2, bids: 12, price: 26.35, status: "Active" },
-    { id: "6", image: "/bid2.png", name: "Copper Scrap Bundle", type: "Copper", size: "200KG", quantity: 2, bids: 12, price: 26.35, status: "Inactive" },
-    { id: "7", image: "/bid3.png", name: "Copper Scrap Bundle", type: "Copper", size: "200KG", quantity: 2, bids: 12, price: 26.35, status: "Sold" },
-    { id: "8", image: "/bid4.png", name: "Copper Scrap Bundle", type: "Copper", size: "200KG", quantity: 2, bids: 12, price: 26.35, status: "Active" },
-    { id: "9", image: "/bid5.png", name: "Copper Scrap Bundle", type: "Copper", size: "200KG", quantity: 2, bids: 12, price: 26.35, status: "Active" },
-  ];
+  // Map frontend tab to backend status
+  const getApiStatus = (tab: "Active" | "Sold" | "Inactive" | null) => {
+    if (tab === "Inactive") return "draft";
+    if (tab === "Active") return "active";
+    if (tab === "Sold") return "sold";
+    return "all";
+  };
+
+  // Fetch listings from API with mapped status
+  const { data: listingsData, isLoading, error } = useListings({
+    status: getApiStatus(activeTab) as 'active' | 'inactive' | 'sold' | 'draft' | 'all',
+    search: searchQuery || undefined,
+  });
+
+  // Map API data to component format
+  const listings: Listing[] = (listingsData?.listings || []).map((listing) => ({
+    id: listing.id,
+    image: listing.image || '/bid1.png',
+    name: listing.name,
+    type: listing.materialType,
+    size: listing.quantity,
+    quantity: parseInt(listing.quantity) || 0,
+    bids: listing.bidsCount,
+    price: parseFloat(listing.price) || 0,
+    // Map draft to Inactive for display
+    status: listing.status === 'draft' ? 'Inactive' :
+      (listing.status.charAt(0).toUpperCase() + listing.status.slice(1)) as "Active" | "Sold" | "Inactive",
+  }));
 
   const activeListings = listings.filter((l) => l.status === "Active");
   const soldListings = listings.filter((l) => l.status === "Sold");
   const inactiveListings = listings.filter((l) => l.status === "Inactive");
 
-  const activeCount = activeListings.length;
-  const soldCount = soldListings.length;
-  const inactiveCount = inactiveListings.length;
+  // Use counts from API if available, otherwise from filtered lists
+  const activeCount = listingsData?.counts?.active ?? activeListings.length;
+  const soldCount = listingsData?.counts?.sold ?? soldListings.length;
+  const inactiveCount = listingsData?.counts?.inactive ?? inactiveListings.length;
 
   return (
     <div className="min-h-screen mt-10 p-4">
@@ -62,31 +81,48 @@ const SellerDashboardTable = () => {
             </div>
           </div>
 
+          {/* Loading State */}
+          {isLoading && (
+            <div className="p-8 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#C9A227]"></div>
+              <p className="mt-2 text-gray-600">Loading listings...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="p-8 text-center">
+              <p className="text-red-600">Failed to load listings. Please try again.</p>
+            </div>
+          )}
+
           {/* Accordion Sections */}
-          <div className="divide-y divide-gray-200">
+          {!isLoading && !error && (
+            <div className="divide-y divide-gray-200">
 
-            <AccordionSection
-              title={`Active (${activeCount})`}
-              isOpen={activeTab === "Active"}
-              onToggle={() => setActiveTab(activeTab === "Active" ? null : "Active")}
-              listings={activeListings}
-            />
+              <AccordionSection
+                title={`Active (${activeCount})`}
+                isOpen={activeTab === "Active"}
+                onToggle={() => setActiveTab(activeTab === "Active" ? null : "Active")}
+                listings={activeListings}
+              />
 
-            <AccordionSection
-              title={`Sold (${soldCount})`}
-              isOpen={activeTab === "Sold"}
-              onToggle={() => setActiveTab(activeTab === "Sold" ? null : "Sold")}
-              listings={soldListings}
-            />
+              <AccordionSection
+                title={`Sold (${soldCount})`}
+                isOpen={activeTab === "Sold"}
+                onToggle={() => setActiveTab(activeTab === "Sold" ? null : "Sold")}
+                listings={soldListings}
+              />
 
-            <AccordionSection
-              title={`Inactive (${inactiveCount})`}
-              isOpen={activeTab === "Inactive"}
-              onToggle={() => setActiveTab(activeTab === "Inactive" ? null : "Inactive")}
-              listings={inactiveListings}
-            />
+              <AccordionSection
+                title={`Inactive (${inactiveCount})`}
+                isOpen={activeTab === "Inactive"}
+                onToggle={() => setActiveTab(activeTab === "Inactive" ? null : "Inactive")}
+                listings={inactiveListings}
+              />
 
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

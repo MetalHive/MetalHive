@@ -13,15 +13,17 @@ export default function CreateListing() {
   const [currentStep, setCurrentStep] = useState(1);
 
   const renderStep = () => {
+    const goBack = () => setCurrentStep(prev => prev - 1);
+
     switch (currentStep) {
       case 1:
         return <BasicDetails />;
       case 2:
-        return <UploadPhoto />;
+        return <UploadPhoto onBack={goBack} />;
       case 3:
-        return <Description />;
+        return <Description onBack={goBack} />;
       case 4:
-        return <PreviewPublish />;
+        return <PreviewPublish onBack={goBack} />;
       default:
         return null;
     }
@@ -57,9 +59,8 @@ export default function CreateListing() {
       <main className="flex-1">
         <div className="max-w-7xl mx-auto p-6">
           <div
-            className={`bg-white rounded-lg min-h-[600px] grid ${
-              showSidebar ? "grid-cols-[260px_1fr]" : "grid-cols-1"
-            }`}
+            className={`bg-white rounded-lg min-h-[600px] grid ${showSidebar ? "grid-cols-[260px_1fr]" : "grid-cols-1"
+              }`}
           >
             {showSidebar && <Sidebar currentStep={currentStep} />}
 

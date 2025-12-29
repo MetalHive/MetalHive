@@ -1,37 +1,95 @@
 "use client";
 import React, { useState } from "react";
-import { Star, ShoppingCart, Edit3 } from "lucide-react";
+import { Star, Edit3, ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useListingFormStore } from "@/app/stores/ListingFormStore";
+import { useCreateListing, usePublishListing } from "@/app/hooks/useApi";
 
-const productData = {
-    title: "Clean Copper Scrap - 200kg",
-    productCode: "CCS-2024-001",
-    price: 505,
-    rating: 5,
-    reviews: 32200,
-    details: {
-        materialType: "Copper",
-        condition: "Mixed Grade A/B",
-        quantity: "200kg",
-        listedOn: "October 16, 2025",
-        location: "Sheffield",
-    },
-    description:
-        "High-quality clean copper scrap, ideal for recycling and manufacturing purposes. This batch consists of mixed grade copper materials that have been sorted and prepared for industrial use. All materials are verified and certified for purity and quality. Suitable for various industrial applications, including manufacturing, construction, and metal fabrication.",
-    images: [
-        "https://images.unsplash.com/photo-1563460716037-460a3ad24ba9?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1618172193622-5c6eb3c94584?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1581093458791-9be1c4c2f7de?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1645129722600-00a9d56d4a89?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1618172249170-54b39c7822f2?auto=format&fit=crop&w=800&q=80",
-    ],
-};
+interface PreviewPublishProps {
+    onBack?: () => void;
+}
 
-const ProductListing: React.FC = () => {
+const ProductListing: React.FC<PreviewPublishProps> = ({ onBack }) => {
+    const router = useRouter();
+    const { getFormData, resetForm } = useListingFormStore();
+    const createListing = useCreateListing();
+    const publishListing = usePublishListing();
+
     const [currentImage, setCurrentImage] = useState(0);
+    const [isPublishing, setIsPublishing] = useState(false);
+
+    // Get form data from store
+    const formData = getFormData();
+
+    // Create product data from form
+    const productData = {
+        title: formData.materialName || "Copper Scrap Bundle",
+        productCode: `CS-${Date.now()}`,
+        price: parseFloat(formData.basePrice) || 0,
+        rating: 5,
+        reviews: 0,
+        details: {
+            materialType: formData.materialType || "N/A",
+            condition: formData.condition || "N/A",
+            quantity: formData.quantity || "N/A",
+            listedOn: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+            location: formData.location || "N/A",
+        },
+        description: formData.description || "No description provided",
+        images: formData.images.length > 0 ? formData.images : [
+            "https://images.unsplash.com/photo-1563460716037-460a3ad24ba9?auto=format&fit=crop&w=800&q=80",
+        ],
+    };
+
+    const handlePublish = async () => {
+        setIsPublishing(true);
+        try {
+            // Create the listing first
+            const result = await createListing.mutateAsync(formData);
+
+            // If creation successful, publish it
+            if (result.id) {
+                try {
+                    await publishListing.mutateAsync(result.id);
+
+                    // Success - show message, reset form and redirect
+                    alert('Listing published successfully!');
+                    resetForm();
+                    router.push('/sellerDashBoard');
+                } catch (publishError) {
+                    console.error('Failed to publish listing:', publishError);
+                    alert('Listing created but failed to publish. You can publish it manually from your dashboard.');
+                    resetForm();
+                    router.push('/sellerDashBoard');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to create listing:', error);
+            alert('Failed to create listing. Please try again.');
+        } finally {
+            setIsPublishing(false);
+        }
+    };
+
+    const handleEdit = () => {
+        // Go back to step 1
+        router.back();
+    };
 
     return (
         <div className="min-h-screen ">
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Back Button */}
+                {onBack && (
+                    <button
+                        onClick={onBack}
+                        className="flex items-center gap-2 text-[#17181a] mb-6 hover:opacity-70 transition-opacity"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                        <span className="text-sm font-medium">Back</span>
+                    </button>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
                     {/* Image Section */}
                     <div className=" col-span-3">
@@ -76,7 +134,7 @@ const ProductListing: React.FC = () => {
                                     ))}
                                 </div>
                                 <span className="text-sm text-gray-600">
-                                    ({productData.reviews.toLocaleString()} reviews)
+                                    (New listing)
                                 </span>
                             </div>
 
@@ -105,15 +163,29 @@ const ProductListing: React.FC = () => {
 
                             {/* Action Buttons */}
                             <div className="flex gap-4">
-                                <button className=" bg-white hover:bg-[#C9A227] hover:text-white font-semibold px-4 py-2  rounded-md transition-colors flex border-[#E8E8E8] border items-center justify-center gap-2">
+                                <button
+                                    onClick={handleEdit}
+                                    disabled={isPublishing}
+                                    className="bg-white hover:bg-[#C9A227] hover:text-white font-semibold px-4 py-2 rounded-md transition-colors flex border-[#E8E8E8] border items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Edit3 className="w-4 h-4" />
                                     Edit
                                 </button>
-                                <button className=" bg-[#C9A227] hover:bg-gray-50 hover:text-[#C9A227] text-white font-semibold px-4 py-2  rounded-md border border-gray-300 transition-colors flex items-center justify-center gap-2">
-                                    Publish
+                                <button
+                                    onClick={handlePublish}
+                                    disabled={isPublishing}
+                                    className="bg-[#C9A227] hover:bg-gray-50 hover:text-[#C9A227] text-white font-semibold px-4 py-2 rounded-md border border-gray-300 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isPublishing ? 'Publishing...' : 'Publish'}
                                 </button>
                             </div>
 
-                            {/* Description */}
+                            {/* Error Message */}
+                            {createListing.error && (
+                                <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                                    Failed to create listing. Please try again.
+                                </div>
+                            )}
 
                         </div>
                     </div>

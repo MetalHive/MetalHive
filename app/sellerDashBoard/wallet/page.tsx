@@ -1,6 +1,10 @@
+"use client"
+
 import React from "react"
 import SideBar from "../../Components/SideBar"
 import EarningsChart from "../../Components/EarningsChart"
+import { useWalletSummary, useMonthlyEarnings } from "../../hooks/useApi"
+import { sellerSidebarLinks } from "../../lib/sidebarConfig"
 
 interface Stat {
   title: string
@@ -8,48 +12,40 @@ interface Stat {
   subText: string
 }
 
-const stats: Stat[] = [
-  {
-    title: "Available Balance",
-    value: "$1,240.00",
-    subText: "Withdrawable balance",
-  },
-  {
-    title: "Pending Payouts",
-    value: "$460.00",
-    subText: "Processing from trades",
-  },
-  {
-    title: "Total Earned",
-    value: "$8,320.00",
-    subText: "All-time earnings",
-  },
-  {
-    title: "Last Payout",
-    value: "$520.00",
-    subText: "2 days ago",
-  },
-]
-
-const earnings = [
-  { month: "Jan", value: 30 },
-  { month: "Feb", value: 80 },
-  { month: "Mar", value: 40 },
-  { month: "Apr", value: 45 },
-  { month: "May", value: 65 },
-  { month: "Jun", value: 75 },
-  { month: "Jul", value: 30 },
-  { month: "Aug", value: 65 },
-  { month: "Sep", value: 80 },
-  { month: "Oct", value: 70 },
-  { month: "Nov", value: 25 },
-  { month: "Dec", value: 105 },
-]
-
 const Page = () => {
+  // Fetch wallet data and earnings from API
+  const { data: wallet, isLoading: walletLoading } = useWalletSummary()
+  const { data: earningsData, isLoading: earningsLoading } = useMonthlyEarnings()
+
+  // Map API data to stats
+  const stats: Stat[] = [
+    {
+      title: "Available Balance",
+      value: `$${wallet?.availableBalance.toFixed(2) || '0.00'}`,
+      subText: "Withdrawable balance",
+    },
+    {
+      title: "Pending Payouts",
+      value: `$${wallet?.pendingPayouts.toFixed(2) || '0.00'}`,
+      subText: "Processing from trades",
+    },
+    {
+      title: "Total Earned",
+      value: `$${wallet?.totalEarned.toFixed(2) || '0.00'}`,
+      subText: "All-time earnings",
+    },
+    {
+      title: "Last Payout",
+      value: wallet?.lastPayout ? `$${wallet.lastPayout.amount.toFixed(2)}` : '$0.00',
+      subText: wallet?.lastPayout?.date ? new Date(wallet.lastPayout.date).toLocaleDateString() : 'No payouts yet',
+    },
+  ]
+
+  const earnings = earningsData?.earnings || []
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <SideBar />
+      <SideBar links={sellerSidebarLinks} />
 
       <div className="flex-1 p-6 mt-16 lg:mt-0">
         {/* Header */}
@@ -58,37 +54,46 @@ const Page = () => {
           <p className="text-[#737780]">
             Track your earnings, withdrawal history, and payout status in one place.
           </p>
-
-          <button className="bg-[#C9A227] hover:bg-yellow-700 text-white px-4 py-2 rounded-md font-medium mt-4">
-            Withdraw Funds
-          </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-          {stats.map((stat, index) => (
-            <div key={index}>
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
-                <p className="text-lg text-[#737780] mb-2">
-                  {stat.title}
-                </p>
+        {/* Loading State */}
+        {walletLoading && (
+          <div className="mt-6 flex justify-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#C9A227]"></div>
+          </div>
+        )}
 
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  {stat.value}
-                </h2>
-              </div>
-
-              <p className="text-md text-[#ACACAC] mt-2 ml-4">
-                {stat.subText}
-              </p>
+        {/* Stats Grid */}
+        {!walletLoading && (
+          <>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {stats.map((stat, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white rounded-lg border border-[#EFEFEF] p-6 shadow-sm"
+                >
+                  <p className="text-sm text-[#737780]">{stat.title}</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-[#17181A]">
+                    {stat.value}
+                  </h2>
+                  <p className="mt-1 text-xs text-[#737780]">{stat.subText}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Chart */}
-        <div className="mt-10">
-          <EarningsChart earnings={earnings} />
-        </div>
+            {/* Earnings Chart */}
+            <div className="mt-6">
+              <EarningsChart earnings={earnings} isLoading={earningsLoading} />
+            </div>
+
+            {/* Withdraw Button */}
+            <div className="mt-6">
+              <button className="bg-[#C9A227] hover:bg-[#B08F1F] text-white font-semibold px-6 py-3 rounded-lg transition-colors">
+                Withdraw Funds
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

@@ -5,10 +5,11 @@ interface EarningsItem {
 
 interface Props {
   earnings: EarningsItem[]
+  isLoading?: boolean
 }
 
-const EarningsChart = ({ earnings }: Props) => {
-  const maxValue = Math.max(...earnings.map(e => e.value))
+const EarningsChart = ({ earnings, isLoading }: Props) => {
+  const maxValue = Math.max(...earnings.map(e => e.value), 1)
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm w-full">
@@ -41,19 +42,17 @@ const EarningsChart = ({ earnings }: Props) => {
             <div key={item.month} className="flex flex-col items-center flex-1">
               <div className="w-full flex justify-center">
                 <div
-                  className={`w-4 sm:w-6 rounded-full ${
-                    isDecember ? "bg-amber-500" : "bg-gray-200"
-                  }`}
+                  className={`w-4 sm:w-6 rounded-full ${isDecember ? "bg-amber-500" : "bg-gray-200"
+                    }`}
                   style={{ height: `${height}%` }}
                 />
               </div>
 
               <span
-                className={`mt-2 text-xs ${
-                  isDecember
+                className={`mt-2 text-xs ${isDecember
                     ? "bg-amber-500 text-white px-2 py-0.5 rounded-full"
                     : "text-gray-500"
-                }`}
+                  }`}
               >
                 {item.month}
               </span>
