@@ -1,6 +1,6 @@
 'use client'
 
-import TopBar from '@/app/Components/Topbar'
+import TopBar from '../../components/Topbar'
 
 export default function ListingLayout({
   children,
