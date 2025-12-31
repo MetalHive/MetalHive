@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import SideBar from '@/app/Components/SideBar'
 import TopBar from './components/Topbar'
 import { buyerSidebarLinks } from '../lib/sidebarConfig'
@@ -38,6 +38,8 @@ export default function BuyersDashboardLayout({
     setIsChecking(false)
   }, [router])
 
+  const pathname = usePathname()
+
   // Show loading while checking authorization
   if (isChecking) {
     return (
@@ -50,6 +52,13 @@ export default function BuyersDashboardLayout({
   // Don't render if not authorized
   if (!isAuthorized) {
     return null
+  }
+
+  // Check if we are in settings pages
+  const isSettingsPage = pathname?.startsWith('/buyersDashboard/settings')
+
+  if (isSettingsPage) {
+    return <>{children}</>
   }
 
   return (
