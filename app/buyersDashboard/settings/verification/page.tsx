@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { SettingsCard, TextInput, SettingsButton, SettingsSection } from '../../../../Components/SettingsComponents';
+import { SettingsCard, TextInput, SettingsButton, SettingsSection } from '../../../Components/SettingsComponents';
 import { Upload, FileText, Briefcase } from 'lucide-react';
 
 const VerificationPage = () => {

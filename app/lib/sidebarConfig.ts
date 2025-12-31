@@ -16,13 +16,13 @@ export const sellerSidebarLinks: SidebarLink[] = [
     href: '/sellerDashBoard',
     icon: Home,
   },
-  
+
   {
     label: 'Listings',
     href: '/sellerDashBoard/Listing',
     icon: Grid,
   },
- 
+
   {
     label: 'Wallet',
     href: '/sellerDashBoard/wallet',
@@ -46,7 +46,7 @@ export const buyerSidebarLinks: SidebarLink[] = [
     href: '/buyersDashboard',
     icon: Home,
   },
-   {
+  {
     label: 'Marketplace',
     href: '/buyersDashboard/Marketplace',
     icon: BsShop,
@@ -63,7 +63,7 @@ export const buyerSidebarLinks: SidebarLink[] = [
   },
   {
     label: 'Settings',
-    href: '/buyersDashboard/Settings',
+    href: '/buyersDashboard/settings',
     icon: IoSettingsOutline,
   },
 ]

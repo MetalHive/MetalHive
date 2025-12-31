@@ -1,5 +1,5 @@
 import React from 'react';
-import BuyerSettingsSidebar from '../../components/BuyerSettingsSidebar';
+import BuyerSettingsSidebar from '../components/BuyerSettingsSidebar';
 
 export default function SettingsLayout({
     children,
