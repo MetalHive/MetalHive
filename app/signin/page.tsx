@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/hooks/useAuth'
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai"
+import { getStoredUser } from '@/app/lib/api/auth'
 
 const SignIn = () => {
     const [email, setEmail] = useState('')
@@ -13,7 +14,7 @@ const SignIn = () => {
     const [showPassword, setShowPassword] = useState(false)
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
     const router = useRouter()
-    const { login, isLoading, error: authError, user } = useAuth()
+    const { login, isLoading, error: authError } = useAuth()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -33,19 +34,24 @@ const SignIn = () => {
         try {
             await login({ email, password })
 
-            // Redirect based on user role (handled in useAuth, but doublecheck here)
-            if (user?.role === 'SELLER') {
+            // Get user from localStorage after login (the login function saves it there)
+            const storedUser = getStoredUser()
+
+            // Redirect based on user role
+            if (storedUser?.role === 'SELLER') {
                 router.push('/sellerDashBoard')
-            } else if (user?.role === 'BUYER') {
+            } else if (storedUser?.role === 'BUYER') {
                 router.push('/buyersDashboard')
             } else {
-                router.push('/sellerDashBoard') // default
+                // Default fallback
+                router.push('/sellerDashBoard')
             }
         } catch (err) {
             console.error('Login failed:', err)
             // Error will be shown via authError
         }
     }
+
 
     return (
         <div className="min-h-screen flex flex-col px-4 py-10">

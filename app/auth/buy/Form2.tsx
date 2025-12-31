@@ -4,21 +4,23 @@ import { useState } from "react"
 import { IoArrowBack } from "react-icons/io5"
 import { useBuyerFormStore } from "@/app/stores/BuyerStore"
 import { useRouter } from "next/navigation"
+import authService from "@/app/lib/api/services/authService"
 
 interface Form2Props {
   onComplete?: () => void
   onBack?: () => void
 }
-const router = useRouter()
-
 const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
-  const { buyerData, updateBuyerData } = useBuyerFormStore()
+  const router = useRouter()
+  const { buyerData, updateBuyerData, resetBuyerData } = useBuyerFormStore()
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
- 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
 
   const [preview, setPreview] = useState<string | null>(null)
 
- const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, files } = e.target as any
     if (files) {
       updateBuyerData({ [name]: files[0] })
@@ -33,29 +35,50 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-  const newErrors: { [key: string]: string } = {}
+    const newErrors: { [key: string]: string } = {}
 
-  // Validate required fields
-  if (!buyerData.companyName) newErrors.companyName = "Company Name is required"
-  if (!buyerData.registrationNumber) newErrors.registrationNumber = "Registration Number is required"
-  if (!buyerData.companyAddress) newErrors.companyAddress = "Company Address is required"
-  if (!buyerData.contactPerson.name) newErrors.contactPersonName = "Contact Person Name is required"
-  if (!buyerData.contactPerson.position) newErrors.contactPersonPosition = "Contact Person Position is required"
+    // Validate required fields
+    if (!buyerData.companyName) newErrors.companyName = "Company Name is required"
+    if (!buyerData.registrationNumber) newErrors.registrationNumber = "Registration Number is required"
+    if (!buyerData.companyAddress) newErrors.companyAddress = "Company Address is required"
+    if (!buyerData.contactPerson.name) newErrors.contactPersonName = "Contact Person Name is required"
+    if (!buyerData.contactPerson.position) newErrors.contactPersonPosition = "Contact Person Position is required"
 
-  if (Object.keys(newErrors).length > 0) {
-    setErrors(newErrors)
-    return
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
+    setErrors({})
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      await authService.registerBuyer({
+        email: buyerData.email,
+        password: buyerData.password,
+        password_confirm: buyerData.password,
+        company_name: buyerData.companyName,
+        registration_number: buyerData.registrationNumber,
+        company_address: buyerData.companyAddress,
+        contact_person_name: buyerData.contactPerson.name,
+        contact_person_position: buyerData.contactPerson.position,
+        verification_document: buyerData.verificationDocument || undefined,
+      })
+
+      resetBuyerData()
+      if (onComplete) onComplete()
+      router.push("/buyersDashboard")
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      setSubmitError(error?.response?.data?.message || 'Registration failed. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
-
-  setErrors({})
-
-  if (onComplete) onComplete()
-
-  router.push("/buyersDashboard")
-}
 
 
 
@@ -177,15 +200,23 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
             </div>
           </div>
 
+          {/* Error Message */}
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {submitError}
+            </div>
+          )}
+
           {/* Submit */}
           <div className="flex justify-end">
             <button
               type="submit"
+              disabled={isSubmitting}
               className="bg-[#C9A227] text-white hover:border-[#C9A227] hover:border-2 
                        hover:bg-white hover:text-[#C9A227] font-semibold px-5 py-2.5 
-                       md:px-6 md:py-3 rounded-lg transition"
+                       md:px-6 md:py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Submit for verification
+              {isSubmitting ? 'Submitting...' : 'Submit for verification'}
             </button>
           </div>
 

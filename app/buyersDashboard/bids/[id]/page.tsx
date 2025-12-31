@@ -1,135 +1,137 @@
 'use client'
 import { useState } from 'react';
-import { ChevronLeft, Star, MapPin, Package, Scale } from 'lucide-react';
-import ProductCard from '../../components/marketPlaceCard';
-import Link from 'next/link'
-interface ListingData {
-  id: string;
-  title: string;
-  weight: string;
-  seller: string;
-  price: number;
-  rating: number;
-  type: string;
-  quantity: string;
-  location: string;
-  description: string;
-  images: string[];
-  createdDate: string;
-  priceNote: string;
-}
- const sampleProducts = [
-        {
-            id: '1',
-            title: "Copper Scrap",
-            price: "$520 / tonne",
-            location: "Liverpool",
-            timeAgo: "2 hours ago",
-            description: "Bulk supply available, uniform quality",
-            images: ["/bid1.png", "/bid2.png", "/bid3.png", "/bid4.png", "/bid5.png"],
-        },
-        {
-            id: '2',
-            title: "Aluminium Ingots",
-            price: "$1,200 / tonne",
-            location: "Manchester",
-            timeAgo: "5 hours ago",
-            description: "High-grade aluminium suitable for industrial use",
-            images: ["/bid2.png", "/bid3.png", "/bid4.png"],
-        },
-        {
-            id: '3',
-            title: "Steel Rebars",
-            price: "$780 / tonne",
-            location: "Birmingham",
-            timeAgo: "1 day ago",
-            description: "Construction-grade steel, ready for pickup",
-            images: ["/bid3.png", "/bid4.png", "/bid5.png"],
-        },
-        {
-            id: '4',
-            title: "Brass Scrap",
-            price: "$640 / tonne",
-            location: "Leeds",
-            timeAgo: "3 hours ago",
-            description: "Clean brass scrap with consistent composition",
-            images: ["/bid1.png", "/bid3.png", "/bid5.png"],
-        },
-       
-    ];
-// Sample data - replace with your actual data
-const sampleListing: ListingData = {
-  id: '1',
-  title: 'Copper Scrap – 200kg',
-  weight: '500kg',
-  seller: 'Offer received on Mixed Steel Scrap – 500kg',
-  price: 18.00,
-  rating: 5,
-  type: 'Copper Scrap',
-  quantity: '500kg',
-  location: 'Birmingham',
-  description: 'We can arrange pickup within 24 hours and will handle all loading logistics on our side. Our team operates nationwide, so collection will not require any support from you. This ensures a smooth, quick turnaround.',
-  images: [
-    'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800&q=80',
-    'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800&q=80',
-    'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800&q=80',
-  ],
-  createdDate: '12-07-2025',
-  priceNote: 'Final price depends on your bid.'
-};
+import { useParams, useRouter } from 'next/navigation';
+import { ChevronLeft, MapPin, Package, Scale } from 'lucide-react';
+import { useBuyerBidDetail, useWithdrawBid, useAcceptCounterOffer, useRejectCounterOffer } from '../../../hooks/useBuyer';
 
-const BidsDetail: React.FC<{ data?: ListingData }> = ({ data = sampleListing }) => {
+const BidsDetail = () => {
+  const params = useParams();
+  const router = useRouter();
+  const bidId = params.id as string;
+
+  const { data: bid, isLoading, error } = useBuyerBidDetail(bidId);
+  const withdrawBid = useWithdrawBid();
+  const acceptCounter = useAcceptCounterOffer();
+  const rejectCounter = useRejectCounterOffer();
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const handleWithdraw = () => {
+    if (confirm('Are you sure you want to withdraw this bid?')) {
+      withdrawBid.mutate(bidId, {
+        onSuccess: () => {
+          alert('Bid withdrawn successfully');
+          router.push('/buyersDashboard/bids');
+        },
+        onError: () => alert('Failed to withdraw bid'),
+      });
+    }
+  };
+
+  const handleAcceptCounter = () => {
+    if (bid?.latestCounterOffer) {
+      acceptCounter.mutate(bidId, {
+        onSuccess: () => {
+          alert('Counter offer accepted!');
+          router.push('/buyersDashboard/bids');
+        },
+        onError: () => alert('Failed to accept counter offer'),
+      });
+    }
+  };
+
+  const handleRejectCounter = () => {
+    if (bid?.latestCounterOffer) {
+      rejectCounter.mutate(bidId, {
+        onSuccess: () => {
+          alert('Counter offer rejected');
+          router.refresh();
+        },
+        onError: () => alert('Failed to reject counter offer'),
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9A227]"></div>
+      </div>
+    );
+  }
+
+  if (error || !bid) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <p className="text-red-500 mb-4">Failed to load bid details.</p>
+        <button
+          onClick={() => router.back()}
+          className="text-[#C9A227] hover:underline"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
+  const images = bid.listing.images?.length > 0 ? bid.listing.images : ['/bid1.png'];
+  const isCountered = bid.status === 'countered' && bid.latestCounterOffer;
+  const isPending = bid.status === 'pending';
 
   return (
     <div className="">
-      <div className="w-full ">
-          {/* Back Button */}
-            <button className=" text-gray-600 mb-4 hover:text-gray-900">
-              <ChevronLeft className="w-5 h-5" />
-            </button>
+      <div className="w-full">
+        {/* Back Button */}
+        <button
+          onClick={() => router.back()}
+          className="text-gray-600 mb-4 hover:text-gray-900"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
         <div className="grid md:grid-cols-12 gap-8 p-6">
           {/* Left Column - Images */}
-          <div className=' col-span-6 mb-20'>
+          <div className='col-span-6 mb-20'>
             {/* Title */}
-            <h2 className="text-lg font-semibold mb-2">{data.title} - {data.weight}</h2>
+            <h2 className="text-lg font-semibold mb-2">{bid.listing.title}</h2>
 
             {/* Image Carousel */}
             <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-4">
-              <img 
-                src={data.images[currentImageIndex]} 
-                alt={data.title}
+              <img
+                src={images[currentImageIndex]}
+                alt={bid.listing.title}
                 className="w-full h-80 object-cover"
               />
-              
+
               {/* Image Dots */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                {data.images.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentImageIndex 
-                        ? 'bg-white w-6' 
+              {images.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                  {images.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-all ${index === currentImageIndex
+                        ? 'bg-white w-6'
                         : 'bg-white/50'
-                    }`}
-                  />
-                ))}
-              </div>
+                        }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Product Title and Date */}
             <div className='mt-7'>
-              <h1 className="text-2xl font-bold mb-1">{data.title}</h1>
+              <h1 className="text-2xl font-bold mb-1">{bid.listing.title}</h1>
               <p className="text-sm text-gray-500 mb-4">
-              Offer received on Mixed Steel Scrap – 500kg
+                Offer received on {bid.listing.title}
               </p>
 
               {/* Description Section */}
               <div className="my-6">
                 <h3 className="text-sm font-semibold mb-2">Description</h3>
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  {data.description}
+                  {bid.listing.description || 'No description available.'}
                 </p>
               </div>
 
@@ -139,71 +141,117 @@ const BidsDetail: React.FC<{ data?: ListingData }> = ({ data = sampleListing }) 
                   <Package className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-xs text-gray-500">Base Price</p>
-                    <p className="text-sm font-semibold">${data.price.toFixed(2)}</p>
+                    <p className="text-sm font-semibold">${Number(bid.listing.basePrice || 0).toFixed(2)}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-xs text-gray-500">Location</p>
-                    <p className="text-sm font-semibold">{data.location}, UK</p>
+                    <p className="text-sm font-semibold">{bid.listing.location}, UK</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <Scale className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-xs text-gray-500">Date Listed</p>
-                    <p className="text-sm font-semibold"> Nov 10, 2025</p>
+                    <p className="text-sm font-semibold">{bid.listing.dateListed}</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-      {/* Right Column - Your Offer Card */}
-<div className='col-span-full md:col-start-7 border md:col-span-5'>
-  <div className="p-6">
-    {/* Header */}
-    <h2 className="text-lg font-semibold text-gray-900 mb-6">Your Offer</h2>
-    
-    {/* Offer Amount */}
-    <div className="mb-4">
-      <p className="text-sm text-gray-600 mb-1">Your Offer Amount</p>
-      <p className="text-2xl font-bold text-gray-900">£540</p>
-    </div>
-    
-    {/* Date Submitted */}
-    <div className="mb-4">
-      <p className="text-sm text-gray-600 mb-1">Date Submitted</p>
-      <p className="text-sm font-medium text-gray-900">Nov 11, 2025 09:12</p>
-    </div>
-    
-    {/* Status */}
-    <div className="mb-6">
-      <p className="text-sm text-gray-600">Awaiting buyer response</p>
-    </div>
-    
-    {/* Message */}
-    <div className="mb-6 p-4 bg-gray-50 rounded-lg w-full">
-      <p className="text-sm text-gray-700 leading-relaxed">
-        We can arrange pickup within 24 hours and cover logistics. If the material is available in additional volume, 
-        we're open to a larger purchase and long-term supply agreement
-      </p>
-    </div>
-    
-    {/* Action Buttons */}
-    <div className="space-y-3">
-      <button className="w-full bg-[#C9A227] hover:bg-yellow-600 text-white font-semibold py-3 rounded-lg transition-colors">
-        Withdraw Offer
-      </button>
-      <button className="w-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 rounded-lg transition-colors">
-        Edit Bid
-      </button>
-    </div>
-  </div>
-</div>
+          {/* Right Column - Your Offer Card */}
+          <div className='col-span-full md:col-start-7 border md:col-span-5'>
+            <div className="p-6">
+              {/* Header */}
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">Your Offer</h2>
+
+              {/* Offer Amount */}
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-1">Your Offer Amount</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  ${bid.offerPrice?.toFixed(2)} / {bid.offerPriceUnit}
+                </p>
+              </div>
+
+              {/* Counter Offer (if exists) */}
+              {isCountered && bid.latestCounterOffer && (
+                <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800 font-medium mb-1">Counter Offer from Seller</p>
+                  <p className="text-xl font-bold text-blue-900">
+                    ${bid.latestCounterOffer.price?.toFixed(2)} / {bid.latestCounterOffer.priceUnit}
+                  </p>
+                </div>
+              )}
+
+              {/* Date Submitted */}
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-1">Date Submitted</p>
+                <p className="text-sm font-medium text-gray-900">{bid.createdAt}</p>
+              </div>
+
+              {/* Status */}
+              <div className="mb-6">
+                <p className="text-sm text-gray-600">
+                  {bid.status === 'pending' && 'Awaiting seller response'}
+                  {bid.status === 'countered' && 'Seller has made a counter offer'}
+                  {bid.status === 'accepted' && 'Your bid has been accepted!'}
+                  {bid.status === 'rejected' && 'Your bid was declined'}
+                </p>
+              </div>
+
+              {/* Message */}
+              {bid.message && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg w-full">
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {bid.message}
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                {isCountered && (
+                  <>
+                    <button
+                      onClick={handleAcceptCounter}
+                      disabled={acceptCounter.isPending}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {acceptCounter.isPending ? 'Accepting...' : 'Accept Counter Offer'}
+                    </button>
+                    <button
+                      onClick={handleRejectCounter}
+                      disabled={rejectCounter.isPending}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {rejectCounter.isPending ? 'Rejecting...' : 'Reject Counter Offer'}
+                    </button>
+                  </>
+                )}
+                {isPending && (
+                  <>
+                    <button
+                      onClick={handleWithdraw}
+                      disabled={withdrawBid.isPending}
+                      className="w-full bg-[#C9A227] hover:bg-yellow-600 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {withdrawBid.isPending ? 'Withdrawing...' : 'Withdraw Offer'}
+                    </button>
+                    <button
+                      onClick={() => router.push(`/buyersDashboard/Marketplace/Placebid?listingId=${bid.listing.id}&editBidId=${bidId}`)}
+                      className="w-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 rounded-lg transition-colors"
+                    >
+                      Edit Bid
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-          
       </div>
     </div>
   );

@@ -194,7 +194,7 @@ const ListingsDashboard = () => {
 
                     <div className="col-span-2 flex items-center">
                       <div>
-                        <div className="font-semibold text-gray-900">${listing.price.toFixed(2)}</div>
+                        <div className="font-semibold text-gray-900">${Number(listing.price || 0).toFixed(2)}</div>
                         {listing.paymentMethod && (
                           <div className="text-sm text-gray-500">{listing.paymentMethod}</div>
                         )}

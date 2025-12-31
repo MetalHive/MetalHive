@@ -1,126 +1,86 @@
 'use client'
+import { useState } from 'react';
 import ProductCard from '../components/marketPlaceCard';
-import SearchFilterBar from '../components/filterMarket'
-import Link from 'next/link'
-const page = () => {
-     const sampleProducts = [
-  {id:'1',
-    title: "Copper Scrap",
-    price: "$520 / tonne",
-    location: "Liverpool",
-    timeAgo: "2 hours ago",
-    description: "Bulk supply available, uniform quality",
-    images: ["/bid1.png", "/bid2.png", "/bid3.png", "/bid4.png", "/bid5.png"],
-  },
-  {
-    id:'2',
-    title: "Aluminium Ingots",
-    price: "$1,200 / tonne",
-    location: "Manchester",
-    timeAgo: "5 hours ago",
-    description: "High-grade aluminium suitable for industrial use",
-    images: ["/bid2.png", "/bid3.png", "/bid4.png"],
-  },
-  {
-    id:'3',
-    title: "Steel Rebars",
-    price: "$780 / tonne",
-    location: "Birmingham",
-    timeAgo: "1 day ago",
-    description: "Construction-grade steel, ready for pickup",
-    images: ["/bid3.png", "/bid4.png", "/bid5.png"],
-  },
-  {
-    id:'4',
-    title: "Brass Scrap",
-    price: "$640 / tonne",
-    location: "Leeds",
-    timeAgo: "3 hours ago",
-    description: "Clean brass scrap with consistent composition",
-    images: ["/bid1.png", "/bid3.png", "/bid5.png"],
-  },
-  {
-    id:'5',
-    title: "Iron Ore",
-    price: "$410 / tonne",
-    location: "Sheffield",
-    timeAgo: "6 hours ago",
-    description: "Raw iron ore available in large quantities",
-    images: ["/bid2.png", "/bid4.png", "/bid5.png"],
-  },
-  {
-    id:'6',
-    title: "Zinc Sheets",
-    price: "$890 / tonne",
-    location: "Nottingham",
-    timeAgo: "12 hours ago",
-    description: "Weather-resistant zinc sheets for roofing",
-    images: ["/bid1.png", "/bid2.png", "/bid3.png"],
-  },
-  {
-    id:'7',
-    title: "Lead Blocks",
-    price: "$1,050 / tonne",
-    location: "Bristol",
-    timeAgo: "8 hours ago",
-    description: "Dense lead blocks for industrial applications",
-    images: ["/bid3.png", "/bid4.png"],
-  },
-  {
-    id:'8',
-    title: "Nickel Alloy",
-    price: "$2,300 / tonne",
-    location: "Coventry",
-    timeAgo: "1 day ago",
-    description: "Premium nickel alloy with corrosion resistance",
-    images: ["/bid2.png", "/bid4.png", "/bid5.png"],
-  },
-  {
-    id:'9',
-    title: "Tin Plates",
-    price: "$980 / tonne",
-    location: "Derby",
-    timeAgo: "4 hours ago",
-    description: "Tin-coated plates suitable for packaging",
-    images: ["/bid1.png", "/bid2.png", "/bid5.png"],
-  },
-];
+import SearchFilterBar from '../components/filterMarket';
+import Link from 'next/link';
+import { useMarketplaceListings } from '../../hooks/useBuyer';
+
+const Page = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [materialType, setMaterialType] = useState('');
+  const [location, setLocation] = useState('');
+
+  const { data, isLoading, error } = useMarketplaceListings({
+    search: searchQuery || undefined,
+    materialType: materialType || undefined,
+    location: location || undefined,
+  });
+
+  const listings = data?.listings || [];
+
   return (
     <div>
-        <div className="mb-8">
-    <h1 className="text-2xl font-bold text-gray-900">Marketplace</h1>
-    <p className="text-sm text-gray-600 mt-1">Browse the latest metals available from verified sellers.
-    </p>
-  </div>
-<SearchFilterBar />
-  {/* CARDS */}
-  <div className="min-h-screen bg-gray-50 p-8">
-  {/* Marketplace Header */}
-  <div className="mb-8">
-    <h1 className="text-2xl font-bold text-gray-900">Marketplace</h1>
-    <p className="text-sm text-gray-600 mt-1">
-      Browse available materials from verified sellers
-    </p>
-  </div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Marketplace</h1>
+        <p className="text-sm text-gray-600 mt-1">
+          Browse the latest metals available from verified sellers.
+        </p>
+      </div>
 
-  {/* Product Grid */}
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-    {sampleProducts.map((product) => (
-    <Link
-        key={product.id}
-        href={`/buyersDashboard/Marketplace/${product.id}`}
-        className="block"
-        onClick={(e) => {
-            console.log('Link clicked:', product.id); // Debug log
-        }}
-    >
-        <ProductCard {...product} />
-    </Link>
-))}
-  </div>
-</div>
+      <SearchFilterBar
+        onSearch={setSearchQuery}
+        onMaterialTypeChange={setMaterialType}
+        onLocationChange={setLocation}
+      />
+
+      {/* CARDS */}
+      <div className="min-h-screen bg-gray-50 p-8">
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9A227]"></div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-16">
+            <p className="text-red-500">Failed to load listings. Please try again.</p>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !error && listings.length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-gray-500">No listings found. Try adjusting your filters.</p>
+          </div>
+        )}
+
+        {/* Product Grid */}
+        {!isLoading && !error && listings.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {listings.map((listing) => (
+              <Link
+                key={listing.id}
+                href={`/buyersDashboard/Marketplace/${listing.id}`}
+                className="block"
+              >
+                <ProductCard
+                  id={listing.id}
+                  title={listing.materialName}
+                  price={`$${listing.basePrice} / ${listing.priceUnit}`}
+                  location={listing.location}
+                  timeAgo={new Date(listing.createdAt).toLocaleDateString()}
+                  description={listing.description}
+                  images={listing.images}
+                />
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default page
+export default Page;

@@ -237,7 +237,7 @@ const ListingDetailPage: React.FC = () => {
                         </svg>
                         <div>
                           <p className="text-xs text-[#999999] mb-1">Price</p>
-                          <p className="text-sm font-semibold text-[#17181a]">${listing.price.toFixed(2)}</p>
+                          <p className="text-sm font-semibold text-[#17181a]">${Number(listing.price || 0).toFixed(2)}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-2">

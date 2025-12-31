@@ -11,6 +11,7 @@ interface ProductCardProps {
     timeAgo: string;
     description: string;
     images: string[];
+    
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -20,7 +21,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     location,
     timeAgo,
     description,
-    images
+    images,
 }) => {
     const router = useRouter();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
