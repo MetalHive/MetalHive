@@ -90,14 +90,14 @@ const HistoryPage = () => {
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-sm text-[#737780]">Payment:</span>
                                                     <span
-                                                        className={`px-4 py-1.5 rounded-full text-xs font-semibold ${sale.paymentStatus === 'completed'
+                                                        className={`px-4 py-1.5 rounded-full text-xs font-semibold ${sale.payoutStatus === 'completed'
                                                             ? 'bg-[#d4f4dd] text-[#0e6027]'
-                                                            : sale.paymentStatus === 'pending'
+                                                            : sale.payoutStatus === 'pending'
                                                                 ? 'bg-[#fff3cd] text-[#856404]'
                                                                 : 'bg-[#f0f0f0] text-[#666666]'
                                                             }`}
                                                     >
-                                                        {sale.paymentStatus.charAt(0).toUpperCase() + sale.paymentStatus.slice(1)}
+                                                        {sale.payoutStatus.charAt(0).toUpperCase() + sale.payoutStatus.slice(1)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -143,7 +143,7 @@ const HistoryPage = () => {
                                 <div className="bg-white rounded-2xl border border-[#ececec] p-6 hover:shadow-md transition-all">
                                     <p className="text-sm text-[#737780] mb-2 font-medium">Average Sale</p>
                                     <p className="text-4xl font-bold text-[#17181a]">
-                                        {formatCurrency(data.summary.averageSale)}
+                                        {formatCurrency(data.summary.totalSales > 0 ? data.summary.totalRevenue / data.summary.totalSales : 0)}
                                     </p>
                                     <p className="text-sm text-[#999999] mt-2">Per transaction</p>
                                 </div>

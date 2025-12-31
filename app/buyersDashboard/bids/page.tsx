@@ -131,10 +131,10 @@ const Page = () => {
                     id={bid.id}
                     title={bid.listing.title}
                     price={`$${bid.listing.basePrice}`}
-                    offerPrice={`$${bid.offerPrice}`}
+
                     location={bid.listing.location}
                     timeAgo={new Date(bid.createdAt).toLocaleDateString()}
-                    description={`Your offer: $${bid.offerPrice} - ${bid.quantity}`}
+                    description={`Your offer: $${bid.offerAmount} - ${bid.quantity}`}
                     images={[bid.listing.image]}
                   />
                   <span className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium ${statusBadge.color}`}>
