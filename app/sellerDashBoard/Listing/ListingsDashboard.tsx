@@ -46,7 +46,7 @@ const ListingsDashboard = () => {
     size: listing.quantity,
     quantity: parseInt(listing.quantity) || 0,
     bids: listing.bidsCount,
-    price: parseFloat(listing.price) || 0,
+    price: listing.price || 0,
     // Map draft to Inactive for display
     status: listing.status === 'draft' ? 'Inactive' :
       (listing.status.charAt(0).toUpperCase() + listing.status.slice(1)) as 'Active' | 'Sold' | 'Inactive',
