@@ -58,9 +58,10 @@ const Hero = () => {
           >
             Get Started
           </Link>
-          <button className="border border-white hover:bg-white hover:text-black text-white px-6 py-3 rounded-lg font-semibold transition">
+          <Link
+            href={"/auth"} className="border border-white hover:bg-white hover:text-black text-white px-6 py-3 rounded-lg font-semibold transition">
             View Listing
-          </button>
+          </Link>
         </div>
       </div>
     </section>
