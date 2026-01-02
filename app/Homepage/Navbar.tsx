@@ -104,9 +104,9 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <button className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition">
+                <Link href={"/auth"} className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition">
               Get Started
-            </button>
+            </Link>
           </div>
         </div>
       )}

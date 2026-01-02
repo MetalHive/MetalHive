@@ -22,14 +22,14 @@ apiClient.interceptors.request.use(
 
     return config;
   },
-  (error) => {
+  (error:any) => {
     return Promise.reject(error);
   }
 );
 
 // Response interceptor for token refresh and unwrapping data
 apiClient.interceptors.response.use(
-  (response) => {
+  (response: any) => {
     // Unwrap the data from backend response structure
     // Backend returns: { success: true, data: {...}, errors: null }
     // We want to return just the data part

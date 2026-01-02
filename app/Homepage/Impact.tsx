@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image";
-
+import Link from "next/link";
 const Impact = () => {
   return (
     <section className="bg-[#17181A] text-white py-12 px-6 md:px-12 lg:px-20">
@@ -20,9 +20,9 @@ const Impact = () => {
           </p>
         </div>
 
-        <button className="bg-white hover:bg-[#C9A227] hover:text-white font-semibold text-black px-5 py-2.5 md:px-6 md:py-3 rounded-lg transition w-full md:w-auto">
+           <Link href={"/auth"} className="bg-white hover:bg-[#C9A227] hover:text-white font-semibold text-black px-5 py-2.5 md:px-6 md:py-3 rounded-lg transition w-full md:w-auto">
           Get Started
-        </button>
+        </Link>
       </div>
 
       {/* Stats Section */}

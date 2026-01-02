@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import Image from "next/image";
 import Navbar from "./Navbar";
-
+import Link from "next/link";
 const Hero = () => {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -73,9 +73,9 @@ const Hero = () => {
           </p>
 
           <div className="mt-8 flex gap-4">
-            <button className="bg-white hover:bg-[#C9A227] hover:text-white font-semibold text-black px-6 py-3 rounded-lg transition">
+               <Link href={"/auth"} className="bg-white hover:bg-[#C9A227] hover:text-white font-semibold text-black px-6 py-3 rounded-lg transition">
               Get Started
-            </button>
+         </Link>
             <button className="border border-white hover:bg-white hover:text-black text-white px-6 py-3 rounded-lg font-semibold transition">
               View Listing
             </button>
