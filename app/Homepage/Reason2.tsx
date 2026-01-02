@@ -3,7 +3,7 @@
 import React, { useRef, useState } from "react";
 import Image from "next/image";
 import { FaChevronRight } from "react-icons/fa";
-
+import Link from "next/link";
 const Reason2: React.FC = () => {
   const cards = [
     {
@@ -79,9 +79,9 @@ const Reason2: React.FC = () => {
     </p>
   </div>
 
-  <button className="bg-[#C9A227] text-white hover:bg-white hover:text-[#C9A227] font-semibold px-5 py-2.5 md:px-6 md:py-3 rounded-lg transition w-full md:w-auto">
+      <Link href={"/auth"} className="bg-[#C9A227] text-white hover:bg-white hover:text-[#C9A227] font-semibold px-5 py-2.5 md:px-6 md:py-3 rounded-lg transition w-full md:w-auto">
     Get Started
-  </button>
+  </Link>
 </div>
 
 

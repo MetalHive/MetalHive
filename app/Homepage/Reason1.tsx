@@ -29,7 +29,7 @@ const Reason1 = () => {
   ];
 
   return (
-    <section className="text-[#17181A] py-16 px-6 md:px-16">
+    <section className="text-[#17181A] py-16 px-6 md:px-16" id="impact">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-12">
         <h2 className="text-2xl md:text-3xl font-semibold mb-4">

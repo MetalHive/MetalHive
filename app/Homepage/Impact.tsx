@@ -1,10 +1,10 @@
 "use client"
 
 import Image from "next/image";
-
+import Link from "next/link";
 const Impact = () => {
   return (
-    <section className="bg-[#17181A] text-white py-12 px-6 md:px-12 lg:px-20">
+    <section className="bg-[#17181A] text-white py-12 px-6 md:px-12 lg:px-20" id="about" >
       {/* Top Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="max-w-xl">
@@ -20,9 +20,9 @@ const Impact = () => {
           </p>
         </div>
 
-        <button className="bg-white hover:bg-[#C9A227] hover:text-white font-semibold text-black px-5 py-2.5 md:px-6 md:py-3 rounded-lg transition w-full md:w-auto">
+           <Link href={"/auth"} className="bg-white hover:bg-[#C9A227] hover:text-white font-semibold text-black px-5 py-2.5 md:px-6 md:py-3 rounded-lg transition w-full md:w-auto">
           Get Started
-        </button>
+        </Link>
       </div>
 
       {/* Stats Section */}

@@ -4,7 +4,7 @@ import { FaTelegramPlane, FaInstagram, FaTwitter, FaFacebookF, FaLinkedinIn } fr
 
 const Footer = () => {
   return (
-    <footer className="bg-[#17181A] text-gray-300 py-12 px-4 md:px-20">
+    <footer className="bg-[#17181A] text-gray-300 py-12 px-4 md:px-20" id="contact">
       {/* Top Section */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-6 border-b border-gray-700 pb-6">
         {/* Newsletter - wider column */}

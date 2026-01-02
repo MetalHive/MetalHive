@@ -21,7 +21,7 @@ const Trusted = () => {
   ];
 
   return (
-    <section className="bg-[#F9F9F9] text-[#17181A] py-12 px-6 md:px-16">
+    <section className="bg-[#F9F9F9] text-[#17181A] py-12 px-6 md:px-16" id="how">
       {/* Header Section */}
       <div className="text-center max-w-2xl mx-auto mb-12">
         <h2 className="text-2xl md:text-3xl font-semibold mb-3">

@@ -9,10 +9,10 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "About", href: "/about" },
-    { name: "Marketplace", href: "/marketplace" },
-    { name: "How It Works", href: "/how-it-works" },
-    { name: "Contact", href: "/contact" },
+    { name: "About", href: "#about" },
+    { name: "Marketplace", href: "#impact" },
+    { name: "How It Works", href: "#how" },
+    { name: "Contact", href: "#contact" },
   ];
   const [hide, setHide] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -57,24 +57,24 @@ const Navbar = () => {
           {/* Desktop Nav */}
           <div className="hidden md:flex space-x-8">
             {navLinks.map((link) => (
-              <Link
+              <a
                 key={link.name}
                 href={link.href}
                 className="text-white hover:text-[#C9A227] transition-colors"
               >
                 {link.name}
-              </Link>
+              </a>
             ))}
           </div>
 
           {/* Right Button */}
           <div className="hidden md:block">
-            <Link href={"/auth"}>
-              <button className=" hover:bg-[#C9A227] text-black hover:text-white bg-white font-semibold px-4 py-2 rounded-lg transition">
-                Get Started
-              </button>
-            </Link>
-
+            <a href={"/auth"}>
+            <button className=" hover:bg-[#C9A227] text-black hover:text-white bg-white font-semibold px-4 py-2 rounded-lg transition">
+              Get Started
+            </button>
+            </a>
+            
           </div>
 
           {/* Mobile Menu Button */}
@@ -103,10 +103,8 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <Link href="/auth" onClick={() => setIsOpen(false)}>
-              <button className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition">
-                Get Started
-              </button>
+                <Link href={"/auth"} className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition">
+              Get Started
             </Link>
           </div>
         </div>

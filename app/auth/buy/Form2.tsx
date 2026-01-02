@@ -173,9 +173,10 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
 
             <div className="bg-white p-4 flex flex-col gap-4">
 
+
               <input
                 type="text"
-                name="contactName"
+                name="contactPersonName"
                 placeholder="Full Name"
                 value={buyerData.contactPerson.name}
                 onChange={handleChange}
@@ -187,7 +188,7 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
 
               <input
                 type="text"
-                name="contactPosition"
+                name="contactPersonPosition"
                 placeholder="Position"
                 value={buyerData.contactPerson.position}
                 onChange={handleChange}
