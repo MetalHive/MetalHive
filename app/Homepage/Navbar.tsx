@@ -14,7 +14,7 @@ const Navbar = () => {
     { name: "How It Works", href: "/how-it-works" },
     { name: "Contact", href: "/contact" },
   ];
-   const [hide, setHide] = useState(false);
+  const [hide, setHide] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
@@ -37,9 +37,8 @@ const Navbar = () => {
 
   return (
     <nav
-     className={` top-0 left-0 w-full z-20 bg-transparent transition-transform duration-300 ${
-        hide ? "-translate-y-full" : "translate-y-0"
-      }`}
+      className={` top-0 left-0 w-full z-20 bg-transparent transition-transform duration-300 ${hide ? "-translate-y-full" : "translate-y-0"
+        }`}
     // className="fixed top-0 left-0 w-full z-50 bg-transparent "
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -47,9 +46,9 @@ const Navbar = () => {
           {/* Logo */}
           <Link href="/" className="text-2xl font-bold text-white">
             <Image
-              src="/logo.png"        
+              src="/logo.png"
               alt="Metal Hive Logo"
-              width={120}      
+              width={120}
               height={120}
               className="object-contain"
             />
@@ -71,11 +70,11 @@ const Navbar = () => {
           {/* Right Button */}
           <div className="hidden md:block">
             <Link href={"/auth"}>
-            <button className=" hover:bg-[#C9A227] text-black hover:text-white bg-white font-semibold px-4 py-2 rounded-lg transition">
-              Get Started
-            </button>
+              <button className=" hover:bg-[#C9A227] text-black hover:text-white bg-white font-semibold px-4 py-2 rounded-lg transition">
+                Get Started
+              </button>
             </Link>
-            
+
           </div>
 
           {/* Mobile Menu Button */}
@@ -104,9 +103,11 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <button className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition">
-              Get Started
-            </button>
+            <Link href="/auth" onClick={() => setIsOpen(false)}>
+              <button className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition">
+                Get Started
+              </button>
+            </Link>
           </div>
         </div>
       )}

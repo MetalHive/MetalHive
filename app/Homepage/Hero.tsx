@@ -3,6 +3,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Navbar from "./Navbar";
 
 const Hero = () => {
@@ -73,12 +74,16 @@ const Hero = () => {
           </p>
 
           <div className="mt-8 flex gap-4">
-            <button className="bg-white hover:bg-[#C9A227] hover:text-white font-semibold text-black px-6 py-3 rounded-lg transition">
-              Get Started
-            </button>
-            <button className="border border-white hover:bg-white hover:text-black text-white px-6 py-3 rounded-lg font-semibold transition">
-              View Listing
-            </button>
+            <Link href="/auth">
+              <button className="bg-white hover:bg-[#C9A227] hover:text-white font-semibold text-black px-6 py-3 rounded-lg transition">
+                Get Started
+              </button>
+            </Link>
+            <Link href="/marketplace">
+              <button className="border border-white hover:bg-white hover:text-black text-white px-6 py-3 rounded-lg font-semibold transition">
+                View Listing
+              </button>
+            </Link>
           </div>
         </motion.div>
       </motion.div>
