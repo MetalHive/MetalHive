@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -44,7 +45,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-white">
+          <Link href="/" className="flex items-center">
             <Image
               src="/logo.png"
               alt="Metal Hive Logo"
@@ -69,12 +70,11 @@ const Navbar = () => {
 
           {/* Right Button */}
           <div className="hidden md:block">
-            <a href={"/auth"}>
-            <button className=" hover:bg-[#C9A227] text-black hover:text-white bg-white font-semibold px-4 py-2 rounded-lg transition">
-              Get Started
-            </button>
-            </a>
-            
+            <Link href="/auth">
+              <button className="hover:bg-[#C9A227] text-black hover:text-white bg-white font-semibold px-4 py-2 rounded-lg transition">
+                Get Started
+              </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -91,7 +91,7 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden ">
+        <div className="md:hidden bg-black/80 backdrop-blur-md">
           <div className="px-4 pt-4 pb-6 space-y-4">
             {navLinks.map((link) => (
               <Link
@@ -103,7 +103,11 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-                <Link href={"/auth"} className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition">
+            <Link
+              href="/auth"
+              onClick={() => setIsOpen(false)}
+              className="block w-full bg-amber-500 hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition"
+            >
               Get Started
             </Link>
           </div>
