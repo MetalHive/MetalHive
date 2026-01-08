@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Navbar from "./Navbar";
 import Link from "next/link";
+import Navbar from "./Navbar";
 
 const Hero = () => {
   return (
@@ -15,6 +15,7 @@ const Hero = () => {
           fill
           className="object-cover brightness-75"
         />
+        <div className="w-full h-full bg-black/80"></div>
       </div>
 
       {/* Navbar */}

@@ -17,14 +17,32 @@ const Navbar = () => {
     { name: "How It Works", href: "#how" },
     { name: "Contact", href: "#contact" },
   ];
+  const [hide, setHide] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
- 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > lastScrollY && window.scrollY > 50) {
+        // scrolling down
+        setHide(true);
+      } else {
+        // scrolling up
+        setHide(false);
+      }
+      setLastScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
 
   return (
     <nav
-      className={`sticky top-0 left-0 w-full z-50 bg-transparent transition-transform duration-300 ${
-        hide ? "-translate-y-full" : "translate-y-0"
-      }`}
+      className={` top-0 left-0 w-full z-20 bg-transparent transition-transform duration-300 ${hide ? "-translate-y-full" : "translate-y-0"
+        }`}
+    // className="fixed top-0 left-0 w-full z-50 bg-transparent "
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
