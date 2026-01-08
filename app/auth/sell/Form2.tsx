@@ -14,7 +14,6 @@ interface Form2Props {
 const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
   const { formData, updateFormData } = useFormStore()
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
-  const [passwordConfirm, setPasswordConfirm] = useState('')
   const router = useRouter()
   const { registerSeller, isLoading, error: authError } = useAuth()
 
@@ -69,11 +68,6 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
     if (!addressDetails.country) newErrors.country = "Country is required"
     if (!formData.Description) newErrors.Description = "Description is required"
 
-    // Validate password confirmation
-    if (formData.password !== passwordConfirm) {
-      newErrors.passwordConfirm = "Passwords do not match"
-    }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
@@ -86,7 +80,7 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
       const registrationData = {
         email: formData.email,
         password: formData.password,
-        password_confirm: passwordConfirm,
+        password_confirm: formData.confirmPassword,
         business_type: formData.BusinessType as 'INDIVIDUAL' | 'COMPANY',
         address: fullAddress, // Send concatenated address
         description: formData.Description,
@@ -102,7 +96,9 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
       console.error("Registration failed:", err)
       // Error will be shown via authError from useAuth
     }
+
   }
+
 
   // Map labels to store keys explicitly
   // Removed "Address" from here, handled manually
@@ -280,22 +276,7 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
             )
           })}
 
-          {/* Password Confirmation Field */}
-          <label className="block border bg-[#F6F6F6] border-[#F6F6F6] rounded-2xl text-md text-gray-600">
-            <div className="mb-2 text-lg pt-2 pl-2 font-medium">Confirm Password</div>
-            <div className="bg-white p-4">
-              <input
-                type="password"
-                value={passwordConfirm}
-                onChange={(e) => setPasswordConfirm(e.target.value)}
-                placeholder="Re-enter your password"
-                disabled={isLoading}
-                className={`w-full bg-white border rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.passwordConfirm ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
-                  } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              />
-              {errors.passwordConfirm && <p className="text-red-500 text-sm mt-1">{errors.passwordConfirm}</p>}
-            </div>
-          </label>
+
 
           <div className="flex justify-end">
             <button

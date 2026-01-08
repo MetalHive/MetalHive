@@ -5,6 +5,7 @@ interface FormData {
   fullName: string
   email: string
   password: string
+  confirmPassword: string
   phone: string
   BusinessType: 'INDIVIDUAL' | 'COMPANY' | ''
   Address: string
@@ -22,6 +23,7 @@ const initialState: FormData = {
   fullName: "",
   email: "",
   password: "",
+  confirmPassword: "",
   phone: "",
   BusinessType: "",
   Address: "",

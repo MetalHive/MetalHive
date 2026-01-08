@@ -11,16 +11,19 @@ interface Form1Props {
 
 const Form1: React.FC<Form1Props> = ({ onComplete }) => {
   const { buyerData, updateBuyerData } = useBuyerFormStore()
-  const [showPassword, setShowPassword] = useState(false) // toggle state
-  const [errors, setErrors] = useState<{ [key: string]: string }>({}) // for validation
-const router = useRouter()
-const handleClick = () => {
-   router.push(`/auth`); 
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const router = useRouter()
+  const handleClick = () => {
+    router.push(`/auth`);
   };
+
   const fields = [
     { label: "Full Name", key: "fullName", type: "text", placeholder: "Atiba Heritage" },
     { label: "Email", key: "email", type: "email", placeholder: "you@example.com" },
     { label: "Password", key: "password", type: "password", placeholder: "********" },
+    { label: "Confirm Password", key: "confirmPassword", type: "password", placeholder: "********" },
     { label: "Phone Number", key: "phone", type: "number", placeholder: "08012345678" },
   ]
 
@@ -33,6 +36,26 @@ const handleClick = () => {
         newErrors[key] = `${label} is required`
       }
     })
+
+    // Password strength check
+    const password = buyerData.password
+    const confirmPassword = buyerData.confirmPassword
+
+    if (password) {
+      if (password.length < 8) {
+        newErrors.password = "Password must be at least 8 characters long"
+      } else if (!/[A-Z]/.test(password)) {
+        newErrors.password = "Password must contain at least one uppercase letter"
+      } else if (!/[0-9]/.test(password)) {
+        newErrors.password = "Password must contain at least one number"
+      } else if (!/[!@#$%^&*]/.test(password)) {
+        newErrors.password = "Password must contain at least one special character (!@#$%^&*)"
+      }
+    }
+
+    if (password && confirmPassword && password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match"
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -47,7 +70,7 @@ const handleClick = () => {
     <div className="flex-1 flex justify-center items-center px-4">
       <div className="w-full max-w-2xl flex flex-col">
         <button className="flex items-center gap-2 text-gray-500 text-sm border-2 border-[#D8D8D8] w-20 h-10 rounded-full px-3 mb-6"
-        onClick={handleClick}>
+          onClick={handleClick}>
           <IoArrowBack size={20} /> <span>Back</span>
         </button>
 
@@ -62,13 +85,18 @@ const handleClick = () => {
               <div className="mb-2 text-lg pt-2 pl-2 font-medium">{label}</div>
               <div className="bg-white p-4 relative">
                 <input
-                  type={label === "Password" ? (showPassword ? "text" : "password") : type}
+                  type={
+                    label === "Password"
+                      ? (showPassword ? "text" : "password")
+                      : label === "Confirm Password"
+                        ? (showConfirmPassword ? "text" : "password")
+                        : type
+                  }
                   placeholder={placeholder}
                   value={buyerData[key as keyof typeof buyerData] as string | number}
                   onChange={(e) => updateBuyerData({ [key]: e.target.value })}
-                  className={`w-full bg-white border rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                    errors[key] ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
-                  }`}
+                  className={`w-full bg-white border rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 ${errors[key] ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
+                    }`}
                 />
                 {label === "Password" && (
                   <button
@@ -77,6 +105,15 @@ const handleClick = () => {
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
                   >
                     {showPassword ? <AiFillEyeInvisible size={20} /> : <AiFillEye size={20} />}
+                  </button>
+                )}
+                {label === "Confirm Password" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+                  >
+                    {showConfirmPassword ? <AiFillEyeInvisible size={20} /> : <AiFillEye size={20} />}
                   </button>
                 )}
               </div>

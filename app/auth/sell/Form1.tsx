@@ -11,16 +11,19 @@ interface Form1Props {
 
 const Form1: React.FC<Form1Props> = ({ onComplete }) => {
   const { formData, updateFormData } = useFormStore()
-  const [showPassword, setShowPassword] = useState(false) // toggle state
-  const [errors, setErrors] = useState<{ [key: string]: string }>({}) // for validation
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const router = useRouter()
   const handleClick = () => {
     router.push(`/auth`);
   };
+
   const fields = [
     { label: "Full Name", key: "fullName", type: "text", placeholder: "Atiba Heritage" },
     { label: "Email", key: "email", type: "email", placeholder: "you@example.com" },
     { label: "Password", key: "password", type: "password", placeholder: "********" },
+    { label: "Confirm Password", key: "confirmPassword", type: "password", placeholder: "********" },
     { label: "Phone Number", key: "phone", type: "number", placeholder: "08012345678" },
   ]
 
@@ -36,6 +39,8 @@ const Form1: React.FC<Form1Props> = ({ onComplete }) => {
 
     // Password strength check
     const password = formData.password
+    const confirmPassword = formData.confirmPassword
+
     if (password) {
       if (password.length < 8) {
         newErrors.password = "Password must be at least 8 characters long"
@@ -46,6 +51,10 @@ const Form1: React.FC<Form1Props> = ({ onComplete }) => {
       } else if (!/[!@#$%^&*]/.test(password)) {
         newErrors.password = "Password must contain at least one special character (!@#$%^&*)"
       }
+    }
+
+    if (password && confirmPassword && password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match"
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -76,7 +85,13 @@ const Form1: React.FC<Form1Props> = ({ onComplete }) => {
               <div className="mb-2 text-lg pt-2 pl-2 font-medium">{label}</div>
               <div className="bg-white p-4 relative">
                 <input
-                  type={label === "Password" ? (showPassword ? "text" : "password") : type}
+                  type={
+                    label === "Password"
+                      ? (showPassword ? "text" : "password")
+                      : label === "Confirm Password"
+                        ? (showConfirmPassword ? "text" : "password")
+                        : type
+                  }
                   placeholder={placeholder}
                   value={formData[key as keyof typeof formData] as string | number}
                   onChange={(e) => updateFormData({ [key]: e.target.value })}
@@ -90,6 +105,15 @@ const Form1: React.FC<Form1Props> = ({ onComplete }) => {
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
                   >
                     {showPassword ? <AiFillEyeInvisible size={20} /> : <AiFillEye size={20} />}
+                  </button>
+                )}
+                {label === "Confirm Password" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+                  >
+                    {showConfirmPassword ? <AiFillEyeInvisible size={20} /> : <AiFillEye size={20} />}
                   </button>
                 )}
               </div>

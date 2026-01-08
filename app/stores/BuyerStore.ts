@@ -5,6 +5,7 @@ interface BuyerFormState {
     fullName: string;
     email: string;
     password: string;
+    confirmPassword: string;
     phone: string;
 
     companyName: string;
@@ -28,6 +29,7 @@ export const useBuyerFormStore = create<BuyerFormState>((set) => ({
     fullName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     phone: "",
 
     companyName: "",
@@ -53,6 +55,7 @@ export const useBuyerFormStore = create<BuyerFormState>((set) => ({
         fullName: "",
         email: "",
         password: "",
+        confirmPassword: "",
         phone: "",
 
         companyName: "",
