@@ -7,8 +7,6 @@ import Image from "next/image";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [hide, setHide] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
 
   const navLinks = [
     { name: "Home", href: "/" },
