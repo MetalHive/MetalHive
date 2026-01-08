@@ -7,22 +7,19 @@ const Footer = () => {
     <footer className="bg-[#17181A] text-gray-300 py-12 px-4 md:px-20" id="contact">
       {/* Top Section */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-6 border-b border-gray-700 pb-6">
-        {/* Newsletter - wider column */}
+        {/* About Us & Contact - wider column */}
         <div className="md:col-span-2">
-          <h2 className="font-bold text-white text-xs mb-1">Subscribe to Newsletter</h2>
-          <p className="text-[10px] mb-2">
+          <h2 className="font-bold text-white text-xs mb-1">About Us</h2>
+          <p className="text-[10px] mb-4">
             The regulated B2B marketplace for buying and selling scrap metals safely, transparently, and in full compliance with industry standards.
           </p>
-          <div className="flex">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full p-1 rounded-l bg-gray-800 border border-gray-700 text-[10px] focus:outline-none"
-            />
-            <button className="bg-blue-600 p-1 rounded-r hover:bg-blue-700">
-              <FaTelegramPlane className="text-[10px]" />
-            </button>
-          </div>
+
+          <h2 className="font-bold text-white text-xs mb-1">Business Contact Information</h2>
+          <p className="text-[10px]">
+            3212 - University Drive, Surrey,<br />
+            BC, Canada.<br />
+            V3T 0S7
+          </p>
         </div>
 
         {/* Company */}

@@ -15,6 +15,7 @@ interface BuyerFormState {
     contactPerson: {
       name: string;
       position: string;
+      phone: string;
     };
   };
 
@@ -37,6 +38,7 @@ export const useBuyerFormStore = create<BuyerFormState>((set) => ({
     contactPerson: {
       name: "",
       position: "",
+      phone: "",
     },
   },
 
@@ -61,6 +63,7 @@ export const useBuyerFormStore = create<BuyerFormState>((set) => ({
         contactPerson: {
           name: "",
           position: "",
+          phone: "",
         },
       },
     }),

@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { IoArrowBack } from "react-icons/io5"
 import { AiOutlineUpload } from "react-icons/ai"
 import { useFormStore } from "@/app/stores/FormStore"
@@ -18,6 +18,30 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
   const router = useRouter()
   const { registerSeller, isLoading, error: authError } = useAuth()
 
+  // Local state for address breakdown
+  const [addressDetails, setAddressDetails] = useState({
+    street: '',
+    apartment: '',
+    city: '',
+    province: '',
+    postalCode: '',
+    country: ''
+  })
+
+  // Initialize address details if formData.Address exists (simple check)
+  useEffect(() => {
+    if (formData.Address && !addressDetails.street) {
+      // Ideally parse existing address, but for signup it's mostly empty.
+      // Keeping it simple.
+    }
+  }, [formData.Address])
+
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setAddressDetails(prev => ({ ...prev, [name]: value }))
+  }
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -34,9 +58,15 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
 
     const newErrors: { [key: string]: string } = {}
 
+    // Construct full address
+    const fullAddress = `${addressDetails.street}, ${addressDetails.apartment ? addressDetails.apartment + ', ' : ''}${addressDetails.city}, ${addressDetails.province}, ${addressDetails.postalCode}, ${addressDetails.country}`.replace(/, ,/g, ',').trim()
+
     // Validate required fields
     if (!formData.BusinessType) newErrors.BusinessType = "Business Type is required"
-    if (!formData.Address) newErrors.Address = "Address is required"
+    if (!addressDetails.street) newErrors.street = "Street Address is required"
+    if (!addressDetails.city) newErrors.city = "City is required"
+    if (!addressDetails.province) newErrors.province = "Province is required"
+    if (!addressDetails.country) newErrors.country = "Country is required"
     if (!formData.Description) newErrors.Description = "Description is required"
 
     // Validate password confirmation
@@ -58,7 +88,7 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
         password: formData.password,
         password_confirm: passwordConfirm,
         business_type: formData.BusinessType as 'INDIVIDUAL' | 'COMPANY',
-        address: formData.Address,
+        address: fullAddress, // Send concatenated address
         description: formData.Description,
         company_logo: formData.UploadCompanyLogo || undefined,
       }
@@ -75,11 +105,11 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
   }
 
   // Map labels to store keys explicitly
+  // Removed "Address" from here, handled manually
   const fields = [
     { label: "Business Type", type: "select", key: "BusinessType", options: ["INDIVIDUAL", "COMPANY"] },
-    { label: "Address", type: "text", key: "Address" },
-    { label: "Upload Company Logo", type: "file", key: "UploadCompanyLogo" },
-    { label: "Description", type: "textarea", key: "Description" },
+    { label: "Upload Scrap Photo (Max 5MB, 4 photos)", type: "file", key: "UploadCompanyLogo" },
+    { label: "Describe scrap metal. And add estimate weight.", type: "textarea", key: "Description" },
   ]
 
   return (
@@ -104,7 +134,98 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col space-y-6">
-          {fields.map(({ label, type, key, options }) => {
+
+          {/* Business Type Field (First item from fields) */}
+          <label className="block border bg-[#F6F6F6] border-[#F6F6F6] rounded-2xl text-md text-gray-600">
+            <div className="mb-2 text-lg pt-2 pl-2 font-medium">Business Type</div>
+            <div className="bg-white p-4">
+              <select
+                name="BusinessType"
+                value={formData.BusinessType || ""}
+                onChange={handleChange}
+                className="w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 border-gray-200 focus:ring-yellow-300"
+              >
+                <option value="">Select type</option>
+                <option value="INDIVIDUAL">INDIVIDUAL</option>
+                <option value="COMPANY">COMPANY</option>
+              </select>
+              {errors.BusinessType && <p className="text-red-500 text-sm mt-1">{errors.BusinessType}</p>}
+            </div>
+          </label>
+
+          {/* Address Fields Block */}
+          <div className="block border bg-[#F6F6F6] border-[#F6F6F6] rounded-2xl text-md text-gray-600">
+            <div className="mb-2 text-lg pt-2 pl-2 font-medium">Address Details</div>
+            <div className="bg-white p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <input
+                  type="text"
+                  name="street"
+                  placeholder="Street Address"
+                  value={addressDetails.street}
+                  onChange={handleAddressChange}
+                  className={`w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 ${errors.street ? "border-red-500" : "border-gray-200 focus:ring-yellow-300"}`}
+                />
+                {errors.street && <p className="text-red-500 text-sm mt-1">{errors.street}</p>}
+              </div>
+              <div>
+                <input
+                  type="text"
+                  name="apartment"
+                  placeholder="Apartment / Suite No"
+                  value={addressDetails.apartment}
+                  onChange={handleAddressChange}
+                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  name="city"
+                  placeholder="City"
+                  value={addressDetails.city}
+                  onChange={handleAddressChange}
+                  className={`w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 ${errors.city ? "border-red-500" : "border-gray-200 focus:ring-yellow-300"}`}
+                />
+                {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+              </div>
+              <div>
+                <input
+                  type="text"
+                  name="province"
+                  placeholder="Province"
+                  value={addressDetails.province}
+                  onChange={handleAddressChange}
+                  className={`w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 ${errors.province ? "border-red-500" : "border-gray-200 focus:ring-yellow-300"}`}
+                />
+                {errors.province && <p className="text-red-500 text-sm mt-1">{errors.province}</p>}
+              </div>
+              <div>
+                <input
+                  type="text"
+                  name="postalCode"
+                  placeholder="Postal Code"
+                  value={addressDetails.postalCode}
+                  onChange={handleAddressChange}
+                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <input
+                  type="text"
+                  name="country"
+                  placeholder="Country"
+                  value={addressDetails.country}
+                  onChange={handleAddressChange}
+                  className={`w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 ${errors.country ? "border-red-500" : "border-gray-200 focus:ring-yellow-300"}`}
+                />
+                {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
+              </div>
+            </div>
+          </div>
+
+          {/* Remaining Fields (Logo, Description) */}
+          {fields.slice(1).map(({ label, type, key, options }) => {
             const value = formData[key as keyof typeof formData]
 
             return (
@@ -126,7 +247,7 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
                         htmlFor={key}
                         className={`flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl px-4 py-3 ${isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                       >
-                        <AiOutlineUpload size={20} /> Upload Company Logo
+                        <AiOutlineUpload size={20} /> {label}
                       </label>
                       {value instanceof File && (
                         <div className="mt-3 flex items-center gap-4">
@@ -141,45 +262,18 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
                         </div>
                       )}
                     </div>
-                  ) : type === "select" ? (
-                    <select
-                      name={key}
-                      value={(value as string) ?? ""}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={`w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 ${errors[key] ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
-                        } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <option value="">Select type</option>
-                      {options?.map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
                   ) : type === "textarea" ? (
                     <textarea
                       name={key}
                       value={(value as string) ?? ""}
                       onChange={handleChange}
-                      placeholder="Describe the project, be as detailed as possible"
+                      placeholder="Describe the project... estimate weight needed"
                       disabled={isLoading}
                       className={`w-full bg-white border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 ${errors[key] ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
                         } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       rows={4}
                     />
-                  ) : (
-                    <input
-                      type="text"
-                      name={key}
-                      value={(value as string) ?? ""}
-                      onChange={handleChange}
-                      placeholder={label}
-                      disabled={isLoading}
-                      className={`w-full bg-white border rounded-xl px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 ${errors[key] ? "border-red-500 focus:ring-red-400" : "border-gray-200 focus:ring-yellow-300"
-                        } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    />
-                  )}
+                  ) : null}
                   {errors[key] && <p className="text-red-500 text-sm mt-1">{errors[key]}</p>}
                 </div>
               </label>

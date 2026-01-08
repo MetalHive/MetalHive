@@ -9,12 +9,13 @@ const Hero = () => {
     <section className="relative h-screen bg-black">
       {/* Background */}
       <div className="absolute inset-0">
-        <Image
+        {/* <Image
           src="/hero-bg.jpg"
           alt="Metal Hive Background"
           fill
           className="object-cover brightness-75"
-        />
+        /> */}
+        <div className="w-full h-full bg-black/80"></div>
       </div>
 
       {/* Navbar */}
