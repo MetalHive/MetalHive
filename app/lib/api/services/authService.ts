@@ -15,6 +15,7 @@ export interface BuyerRegistrationData {
     company_address: string;
     contact_person_name: string;
     contact_person_position: string;
+    contact_person_phone: string;
     verification_document?: File;
 }
 
@@ -48,6 +49,7 @@ const authService = {
         formData.append('company_address', data.company_address);
         formData.append('contact_person_name', data.contact_person_name);
         formData.append('contact_person_position', data.contact_person_position);
+        formData.append('contact_person_phone', data.contact_person_phone);
 
         if (data.verification_document) {
             formData.append('verification_document', data.verification_document);
