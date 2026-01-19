@@ -82,7 +82,7 @@ export default function BasicDetails() {
 
         {/* Quantity */}
         <FormField
-          label="Quantity (kg)"
+          label="Estimated Weight (kg)"
           placeholder="e.g. 500"
           value={quantity}
           onChange={(e) => updateFormData({ quantity: e.target.value })}
@@ -91,7 +91,7 @@ export default function BasicDetails() {
 
         {/* Base Price */}
         <FormField
-          label="Base Price (per tonne)"
+          label="Price (per tonne)"
           placeholder="e.g. 450"
           value={basePrice}
           onChange={(e) => updateFormData({ basePrice: e.target.value })}
@@ -101,7 +101,7 @@ export default function BasicDetails() {
         {/* Location */}
         <FormField
           label="Location"
-          placeholder="e.g. Sheffield, UK"
+          placeholder="e.g. Ontario, Canada"
           value={location}
           onChange={(e) => updateFormData({ location: e.target.value })}
           error={errors.location}

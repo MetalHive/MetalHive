@@ -27,7 +27,7 @@ export const sellerSidebarLinks: SidebarLink[] = [
     label: 'Wallet',
     href: '/sellerDashBoard/wallet',
     icon: Wallet,
-    badge: '£1,240',
+    badge: '$1,240',
   }, {
     label: 'History',
     href: '/sellerDashBoard/history',

@@ -20,7 +20,7 @@ const Form1: React.FC<Form1Props> = ({ onComplete }) => {
   };
 
   const fields = [
-    { label: "Full Name", key: "fullName", type: "text", placeholder: "Atiba Heritage" },
+    { label: "Full Name", key: "fullName", type: "text", placeholder: "Full Name" },
     { label: "Email", key: "email", type: "email", placeholder: "you@example.com" },
     { label: "Password", key: "password", type: "password", placeholder: "********" },
     { label: "Confirm Password", key: "confirmPassword", type: "password", placeholder: "********" },

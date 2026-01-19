@@ -5,7 +5,7 @@ import { AiOutlineUpload } from "react-icons/ai"
 import { useFormStore } from "@/app/stores/FormStore"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/app/hooks/useAuth"
-
+import Link from "next/link"
 interface Form2Props {
   onComplete?: () => void
   onBack?: () => void
@@ -36,10 +36,23 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
   }, [formData.Address])
 
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+  const handleAddressChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    let { name, value } = e.target
+
+    if (name === "postalCode") {
+      value = value.toUpperCase().replace(/[^A-Z0-9]/g, "")
+
+      if (value.length > 3) {
+        value = value.slice(0, 3) + " " + value.slice(3, 6)
+      }
+    }
+
     setAddressDetails(prev => ({ ...prev, [name]: value }))
   }
+
+
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -186,16 +199,36 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
                 {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
               </div>
               <div>
-                <input
-                  type="text"
+                <select
                   name="province"
-                  placeholder="Province"
                   value={addressDetails.province}
                   onChange={handleAddressChange}
-                  className={`w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 ${errors.province ? "border-red-500" : "border-gray-200 focus:ring-yellow-300"}`}
-                />
-                {errors.province && <p className="text-red-500 text-sm mt-1">{errors.province}</p>}
+                  className={`w-full bg-white border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 ${errors.province
+                    ? "border-red-500"
+                    : "border-gray-200 focus:ring-yellow-300"
+                    }`}
+                >
+                  <option value="">Select Province / Territory</option>
+                  <option value="Alberta">Alberta</option>
+                  <option value="British Columbia">British Columbia</option>
+                  <option value="Manitoba">Manitoba</option>
+                  <option value="New Brunswick">New Brunswick</option>
+                  <option value="Newfoundland and Labrador">Newfoundland and Labrador</option>
+                  <option value="Northwest Territories">Northwest Territories</option>
+                  <option value="Nova Scotia">Nova Scotia</option>
+                  <option value="Nunavut">Nunavut</option>
+                  <option value="Ontario">Ontario</option>
+                  <option value="Prince Edward Island">Prince Edward Island</option>
+                  <option value="Quebec">Quebec</option>
+                  <option value="Saskatchewan">Saskatchewan</option>
+                  <option value="Yukon">Yukon</option>
+                </select>
+
+                {errors.province && (
+                  <p className="text-red-500 text-sm mt-1">{errors.province}</p>
+                )}
               </div>
+
               <div>
                 <input
                   type="text"
@@ -203,6 +236,8 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
                   placeholder="Postal Code"
                   value={addressDetails.postalCode}
                   onChange={handleAddressChange}
+                  pattern="[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d"
+                  title="Postal code must be in the format V3T 0S8"
                   className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 />
               </div>
@@ -221,7 +256,7 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
           </div>
 
           {/* Remaining Fields (Logo, Description) */}
-          {fields.slice(1).map(({ label, type, key, options }) => {
+          {/* {fields.slice(1).map(({ label, type, key, options }) => {
             const value = formData[key as keyof typeof formData]
 
             return (
@@ -274,7 +309,13 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
                 </div>
               </label>
             )
-          })}
+          })} */}
+          <p className="text-center">
+            By filling out this form, you acknowledge that you have read and agree to our{' '}
+            <Link href="/terms" className="text-[#C9A227] hover:underline">
+              Terms & Conditions
+            </Link>.
+          </p>
 
 
 
@@ -289,6 +330,7 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
             </button>
           </div>
         </form>
+
       </div>
     </div>
   )

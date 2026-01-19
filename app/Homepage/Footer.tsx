@@ -1,6 +1,6 @@
 "use client"
 import React from "react";
-import { FaTelegramPlane, FaInstagram, FaTwitter, FaFacebookF, FaLinkedinIn } from "react-icons/fa";
+import { FaInstagram, FaTwitter, FaFacebookF, FaLinkedinIn } from "react-icons/fa";
 
 const Footer = () => {
   return (
@@ -16,7 +16,7 @@ const Footer = () => {
 
           <h2 className="font-bold text-white text-xs mb-1">Business Contact Information</h2>
           <p className="text-[10px]">
-            3212 - University Drive, Surrey,<br />
+         3212-10448 University Drive<br />
             BC, Canada.<br />
             V3T 0S7
           </p>

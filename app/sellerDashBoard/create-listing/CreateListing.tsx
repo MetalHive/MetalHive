@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import Sidebar from "./SideBar";
+import Link from "next/link";
+import { FaArrowLeftLong } from "react-icons/fa6";
 import BasicDetails from "./steps/BasicDetails";
 import UploadPhoto from "./steps/UploadPhoto";
 import Description from "./steps/Description";
@@ -64,7 +66,15 @@ export default function CreateListing() {
           >
             {showSidebar && <Sidebar currentStep={currentStep} />}
 
-            <div className="p-6 overflow-y-auto">{renderStep()}</div>
+            <div className="p-6 overflow-y-auto">
+              <Link href={'/sellerDashBoard'} >
+                <button className="flex items-center gap-2 text-gray-500 text-sm border-2 border-[#D8D8D8] w-20 h-10 rounded-full px-3 mb-6">
+
+                  <FaArrowLeftLong size={20} /> <span>Back</span>
+                </button>
+              </Link>
+
+              {renderStep()}</div>
           </div>
         </div>
       </main>

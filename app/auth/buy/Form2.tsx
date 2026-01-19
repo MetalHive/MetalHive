@@ -5,7 +5,7 @@ import { IoArrowBack } from "react-icons/io5"
 import { useBuyerFormStore } from "@/app/stores/BuyerStore"
 import { useRouter } from "next/navigation"
 import authService from "@/app/lib/api/services/authService"
-
+import Link from "next/link"
 interface Form2Props {
     onComplete?: () => void
     onBack?: () => void
@@ -316,7 +316,12 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
                             {submitError}
                         </div>
                     )}
-
+ <p className="text-center">
+            By filling out this form, you acknowledge that you have read and agree to our{' '}
+            <Link href="/terms" className="text-[#C9A227] hover:underline">
+              Terms & Conditions
+            </Link>.
+          </p>
                     {/* Submit */}
                     <div className="flex justify-end">
                         <button
