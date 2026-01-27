@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
 import { IoArrowBack } from "react-icons/io5"
-import { AiOutlineUpload } from "react-icons/ai"
 import { useFormStore } from "@/app/stores/FormStore"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/app/hooks/useAuth"
@@ -28,12 +27,12 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
   })
 
   // Initialize address details if formData.Address exists (simple check)
-  useEffect(() => {
-    if (formData.Address && !addressDetails.street) {
-      // Ideally parse existing address, but for signup it's mostly empty.
-      // Keeping it simple.
-    }
-  }, [formData.Address])
+  // useEffect(() => {
+  //   if (formData.Address && !addressDetails.street) {
+  //     // Ideally parse existing address, but for signup it's mostly empty.
+  //     // Keeping it simple.
+  //   }
+  // }, [formData.Address])
 
 
   const handleAddressChange = (
@@ -65,60 +64,63 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
 
-    const newErrors: { [key: string]: string } = {}
+  const newErrors: Record<string, string> = {}
 
-    // Construct full address
-    const fullAddress = `${addressDetails.street}, ${addressDetails.apartment ? addressDetails.apartment + ', ' : ''}${addressDetails.city}, ${addressDetails.province}, ${addressDetails.postalCode}, ${addressDetails.country}`.replace(/, ,/g, ',').trim()
+  // Validate required fields
+  if (!formData.BusinessType) newErrors.BusinessType = "Business Type is required"
+  if (!addressDetails.street) newErrors.street = "Street Address is required"
+  if (!addressDetails.city) newErrors.city = "City is required"
+  if (!addressDetails.province) newErrors.province = "Province is required"
+  if (!addressDetails.country) newErrors.country = "Country is required"
 
-    // Validate required fields
-    if (!formData.BusinessType) newErrors.BusinessType = "Business Type is required"
-    if (!addressDetails.street) newErrors.street = "Street Address is required"
-    if (!addressDetails.city) newErrors.city = "City is required"
-    if (!addressDetails.province) newErrors.province = "Province is required"
-    if (!addressDetails.country) newErrors.country = "Country is required"
-    if (!formData.Description) newErrors.Description = "Description is required"
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
-    }
-
-    setErrors({})
-
-    try {
-      // Map formData to API format
-      const registrationData = {
-        email: formData.email,
-        password: formData.password,
-        password_confirm: formData.confirmPassword,
-        business_type: formData.BusinessType as 'INDIVIDUAL' | 'COMPANY',
-        address: fullAddress, // Send concatenated address
-        description: formData.Description,
-        company_logo: formData.UploadCompanyLogo || undefined,
-      }
-
-      // Register seller via API
-      await registerSeller(registrationData)
-
-      // Success - redirect to dashboard
-      router.push("/sellerDashBoard")
-    } catch (err: any) {
-      console.error("Registration failed:", err)
-      // Error will be shown via authError from useAuth
-    }
-
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors)
+    return
   }
+
+  setErrors({})
+
+  // Construct full address
+  const fullAddress = [
+    addressDetails.street,
+    addressDetails.apartment,
+    addressDetails.city,
+    addressDetails.province,
+    addressDetails.postalCode,
+    addressDetails.country,
+  ]
+    .filter(Boolean)
+    .join(", ")
+
+  const registrationData = {
+    email: formData.email,
+    password: formData.password,
+    password_confirm: formData.confirmPassword,
+    business_type: formData.BusinessType as "INDIVIDUAL" | "COMPANY",
+    address: fullAddress,
+  }
+
+  // 🔍 Log exactly what is being sent to the API
+  console.log("Register seller payload:", registrationData)
+
+  try {
+    await registerSeller(registrationData)
+    router.push("/sellerDashBoard")
+  } catch (err) {
+    console.error("Registration failed:", err)
+  }
+}
+
 
 
   // Map labels to store keys explicitly
   // Removed "Address" from here, handled manually
   const fields = [
     { label: "Business Type", type: "select", key: "BusinessType", options: ["INDIVIDUAL", "COMPANY"] },
-    { label: "Upload Scrap Photo (Max 5MB, 4 photos)", type: "file", key: "UploadCompanyLogo" },
-    { label: "Describe scrap metal. And add estimate weight.", type: "textarea", key: "Description" },
+   
   ]
 
   return (

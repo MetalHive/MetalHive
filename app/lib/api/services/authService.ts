@@ -25,8 +25,8 @@ export interface SellerRegistrationData {
     password_confirm: string;
     business_type: 'INDIVIDUAL' | 'COMPANY';
     address: string;
-    description: string;
-    company_logo?: File;
+    // description: string;
+    // company_logo?: File;
 }
 
 const authService = {
@@ -74,11 +74,11 @@ const authService = {
         formData.append('password_confirm', data.password_confirm);
         formData.append('business_type', data.business_type);
         formData.append('address', data.address);
-        formData.append('description', data.description);
+        // formData.append('description', data.description);
 
-        if (data.company_logo) {
-            formData.append('company_logo', data.company_logo);
-        }
+        // if (data.company_logo) {
+        //     formData.append('company_logo', data.company_logo);
+        // }
 
         const response = await apiClient.post<AuthResponse>('/auth/register/seller/', formData, {
             headers: {
