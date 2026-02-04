@@ -51,7 +51,8 @@ const AccordionSection = ({ title, isOpen, onToggle, listings }: any) => {
                                 </div>
 
                                 <div className="col-span-2 flex items-center">
-                                    ${listing.price.toFixed(2)}
+                                          ${listing.price}
+                                    {/* ${listing.price.toFixed(2)} */}
                                 </div>
 
                                 <div className="col-span-2 flex items-center">
