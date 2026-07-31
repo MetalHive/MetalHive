@@ -7,7 +7,9 @@ interface ListingFormState {
     materialType: 'Copper' | 'Aluminium' | 'Steel' | '';
     condition: 'Processed' | 'Unprocessed' | 'Mixed' | '';
     quantity: string;
+    quantityUnit: 'kg' | 'tonne' | 'g' | 'lb';
     basePrice: string;
+    priceUnit: 'kg' | 'tonne' | 'g' | 'lb';
     location: string;
 
     // Step 2: Images
@@ -37,7 +39,9 @@ const initialState = {
     materialType: '' as '',
     condition: '' as '',
     quantity: '',
+    quantityUnit: 'kg' as const,
     basePrice: '',
+    priceUnit: 'tonne' as const,
     location: '',
     images: [],
     description: '',
@@ -69,13 +73,17 @@ export const useListingFormStore = create<ListingFormState>((set, get) => ({
             materialName: state.materialName,
             materialType: state.materialType as 'Copper' | 'Aluminium' | 'Steel',
             condition: state.condition as 'Processed' | 'Unprocessed' | 'Mixed',
-            quantity: state.quantity,
+            // The seller's own unit is preserved for display; the backend
+            // normalises to kilograms internally.
+            quantity: `${state.quantity}${state.quantityUnit}`,
+            quantityValue: state.quantity,
+            quantityUnit: state.quantityUnit,
             basePrice: state.basePrice,
             location: state.location,
             description: state.description,
             additional_notes: state.additional_notes,
             images: state.images,
-            priceUnit: 'tonne',
+            priceUnit: state.priceUnit,
         };
     },
 }));

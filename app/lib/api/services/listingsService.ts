@@ -6,10 +6,12 @@ export interface Listing {
     name: string;
     materialType: string;
     quantity: string;
+    quantityValue?: string;
+    quantityUnit?: WeightUnit;
     bidsCount: number;
     price: number;
     priceUnit: string;
-    status: 'draft' | 'active' | 'inactive' | 'sold';
+    status: 'draft' | 'active' | 'inactive' | 'suspended' | 'sold';
     createdAt: string;
 }
 
@@ -25,7 +27,7 @@ export interface ListingDetail {
     location: string;
     description: string;
     images: string[];
-    status: 'draft' | 'active' | 'inactive' | 'sold';
+    status: 'draft' | 'active' | 'inactive' | 'suspended' | 'sold';
     listedOn: string;
     updatedAt: string;
     bidsCount: number;
@@ -48,13 +50,19 @@ export interface ListingsResponse {
     };
 }
 
+export type WeightUnit = 'kg' | 'tonne' | 'g' | 'lb';
+
 export interface CreateListingData {
     materialName: string;
     materialType: 'Copper' | 'Aluminium' | 'Steel';
     condition: 'Processed' | 'Unprocessed' | 'Mixed';
+    /** Display form, e.g. "500kg". Kept for backwards compatibility. */
     quantity: string;
+    /** Preferred structured form; the backend normalises these to kilograms. */
+    quantityValue?: string;
+    quantityUnit?: WeightUnit;
     basePrice: string;
-    priceUnit?: 'tonne' | 'kg' | 'unit';
+    priceUnit?: WeightUnit | 'unit';
     location: string;
     description?: string;
     additional_notes?: string;

@@ -1,6 +1,6 @@
 // ImgBB Image Upload Service
 
-const IMGBB_API_KEY = 'cfc0e69aa147d4cd1e5a627d818b8488';
+const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
 const IMGBB_UPLOAD_URL = 'https://api.imgbb.com/1/upload';
 
 export interface ImgBBResponse {
@@ -64,6 +64,13 @@ const fileToBase64 = (file: File): Promise<string> => {
  */
 export const uploadImage = async (file: File): Promise<UploadResult> => {
     try {
+        if (!IMGBB_API_KEY) {
+            return {
+                success: false,
+                error: 'Image upload is not configured (NEXT_PUBLIC_IMGBB_API_KEY is missing).',
+            };
+        }
+
         const base64Image = await fileToBase64(file);
 
         const formData = new FormData();

@@ -8,7 +8,9 @@ export default function BasicDetails() {
     materialType,
     condition,
     quantity,
+    quantityUnit,
     basePrice,
+    priceUnit,
     location,
     updateBasicDetails
   } = useListingFormStore();
@@ -80,23 +82,58 @@ export default function BasicDetails() {
           )}
         </div>
 
-        {/* Quantity */}
-        <FormField
-          label="Estimated Weight (kg)"
-          placeholder="e.g. 500"
-          value={quantity}
-          onChange={(e) => updateFormData({ quantity: e.target.value })}
-          error={errors.quantity}
-        />
+        {/* Quantity — listed in the seller's own unit; the backend stores the
+            kilogram equivalent for pricing and comparison. */}
+        <div className="flex gap-3 items-start">
+          <div className="flex-1">
+            <FormField
+              label="Estimated Weight"
+              placeholder="e.g. 500"
+              value={quantity}
+              onChange={(e) => updateFormData({ quantity: e.target.value })}
+              error={errors.quantity}
+            />
+          </div>
+          <div className="w-32">
+            <label className="block text-sm font-medium mb-1">Unit</label>
+            <select
+              value={quantityUnit}
+              onChange={(e) => updateFormData({ quantityUnit: e.target.value as typeof quantityUnit })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+            >
+              <option value="kg">Kilograms</option>
+              <option value="tonne">Tonnes</option>
+              <option value="g">Grams</option>
+              <option value="lb">Pounds</option>
+            </select>
+          </div>
+        </div>
 
         {/* Base Price */}
-        <FormField
-          label="Price (per tonne)"
-          placeholder="e.g. 450"
-          value={basePrice}
-          onChange={(e) => updateFormData({ basePrice: e.target.value })}
-          error={errors.basePrice}
-        />
+        <div className="flex gap-3 items-start">
+          <div className="flex-1">
+            <FormField
+              label="Price"
+              placeholder="e.g. 450"
+              value={basePrice}
+              onChange={(e) => updateFormData({ basePrice: e.target.value })}
+              error={errors.basePrice}
+            />
+          </div>
+          <div className="w-32">
+            <label className="block text-sm font-medium mb-1">Per</label>
+            <select
+              value={priceUnit}
+              onChange={(e) => updateFormData({ priceUnit: e.target.value as typeof priceUnit })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+            >
+              <option value="tonne">Tonne</option>
+              <option value="kg">Kilogram</option>
+              <option value="g">Gram</option>
+              <option value="lb">Pound</option>
+            </select>
+          </div>
+        </div>
 
         {/* Location */}
         <FormField
