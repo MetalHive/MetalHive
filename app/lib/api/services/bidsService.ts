@@ -40,10 +40,14 @@ export interface BidDetail {
         companyName: string;
         verified: boolean;
         rating: number;
+        region?: string | null;
     };
     offerPrice: number;
     offerPriceUnit: string;
+    // Already unit-suffixed ("30kg"); do not append offerPriceUnit.
     weight: string;
+    quantityKg?: string | null;
+    totalAmount?: string | null;
     location: string;
     message: string;
     status: 'pending' | 'accepted' | 'rejected' | 'countered' | 'expired';

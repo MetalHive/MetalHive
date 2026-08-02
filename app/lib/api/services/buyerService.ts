@@ -33,7 +33,15 @@ export interface MarketplaceListing {
     sellerName: string;
     materialType?: string;
     condition?: string;
+    // "1000kg" — display string. The structured fields below are what the
+    // bid form uses to label its inputs with the seller's own units.
     quantity?: string;
+    quantityValue?: string;
+    quantityUnit?: string;
+    quantityKg?: string;
+    pricePerKg?: string;
+    totalValue?: string;
+    productCode?: string;
 }
 
 export interface MarketplaceListingsResponse {

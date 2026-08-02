@@ -22,6 +22,20 @@ export default function BidForm() {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
+    // The offer is submitted as a price PER UNIT, matching how the seller
+    // priced the listing. The form previously said only "Bid Price", so a
+    // buyer meaning "$250 for the lot" would submit $250 per kilogram.
+    const priceUnit = listing?.priceUnit || 'kg';
+    const quantityUnit = listing?.quantityUnit || 'kg';
+    const askingPrice = Number(listing?.basePrice || 0);
+
+    const bidPriceValue = parseFloat(formData.bidPrice.replace(/[^0-9.]/g, ''));
+    const quantityValue = parseFloat(formData.quantity.replace(/[^0-9.]/g, ''));
+    const offerTotal =
+        Number.isFinite(bidPriceValue) && Number.isFinite(quantityValue)
+            ? bidPriceValue * quantityValue
+            : null;
+
     const updateFormData = (updates: Partial<typeof formData>) => {
         setFormData(prev => ({ ...prev, ...updates }));
     };
@@ -100,20 +114,45 @@ export default function BidForm() {
                                 </h2>
 
                                 <FormField
-                                    label="Bid Price"
-                                    placeholder="e.g. $300"
+                                    label={`Bid Price (per ${priceUnit})`}
+                                    placeholder={`e.g. 12.50 per ${priceUnit}`}
                                     value={formData.bidPrice}
                                     onChange={(e) => updateFormData({ bidPrice: e.target.value })}
                                     error={errors.bidPrice}
                                 />
+                                <p className="-mt-2 mb-4 text-xs text-gray-500">
+                                    This is a price <span className="font-medium">per {priceUnit}</span>, not a
+                                    total. The seller is asking ${askingPrice.toFixed(2)} per {priceUnit}.
+                                </p>
 
                                 <FormField
-                                    label="Quantity (KG)"
-                                    placeholder="e.g. 300 KG"
+                                    label={`Quantity (${quantityUnit})`}
+                                    placeholder={`e.g. 300 ${quantityUnit}`}
                                     value={formData.quantity}
                                     onChange={(e) => updateFormData({ quantity: e.target.value })}
                                     error={errors.quantity}
                                 />
+                                <p className="-mt-2 mb-4 text-xs text-gray-500">
+                                    {listing?.quantity
+                                        ? `The seller has ${listing.quantity} available.`
+                                        : 'How much you want to buy.'}
+                                </p>
+
+                                {offerTotal !== null && (
+                                    <div className="mb-4 rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
+                                        <p className="text-xs text-gray-500">Your total offer</p>
+                                        <p className="text-lg font-bold text-gray-900">
+                                            ${offerTotal.toLocaleString(undefined, {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                            })}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {quantityValue.toLocaleString()} {quantityUnit} × $
+                                            {bidPriceValue.toFixed(2)} per {priceUnit}
+                                        </p>
+                                    </div>
+                                )}
 
                                 <FormField
                                     label="Message (Optional)"
@@ -182,7 +221,7 @@ export default function BidForm() {
                                 <div>
                                     <p className="text-xs text-gray-500">Price</p>
                                     <p className="text-sm font-semibold text-gray-900">
-                                        ${Number(listing?.basePrice || 0).toFixed(2)}
+                                        ${askingPrice.toFixed(2)} / {priceUnit}
                                     </p>
                                 </div>
                             </div>
