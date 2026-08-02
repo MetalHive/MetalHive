@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useListingFormStore } from "@/app/stores/ListingFormStore";
 import { useCreateListing, usePublishListing } from "@/app/hooks/useApi";
 
+import { useToast } from '@/app/Components/Toast';
 interface PreviewPublishProps {
     onBack?: () => void;
 }
 
 const ProductListing: React.FC<PreviewPublishProps> = ({ onBack }) => {
+    const toast = useToast();
     const router = useRouter();
     const { getFormData, resetForm } = useListingFormStore();
     const createListing = useCreateListing();
@@ -53,19 +55,19 @@ const ProductListing: React.FC<PreviewPublishProps> = ({ onBack }) => {
                     await publishListing.mutateAsync(result.id);
 
                     // Success - show message, reset form and redirect
-                    alert('Listing published successfully!');
+                    toast.success('Listing published successfully!');
                     resetForm();
                     router.push('/sellerDashBoard');
                 } catch (publishError) {
                     console.error('Failed to publish listing:', publishError);
-                    alert('Listing created but failed to publish. You can publish it manually from your dashboard.');
+                    toast.toast('Listing created but failed to publish. You can publish it manually from your dashboard.', 'info');
                     resetForm();
                     router.push('/sellerDashBoard');
                 }
             }
         } catch (error) {
             console.error('Failed to create listing:', error);
-            alert('Failed to create listing. Please try again.');
+            toast.error('Failed to create listing. Please try again.');
         } finally {
             setIsPublishing(false);
         }
