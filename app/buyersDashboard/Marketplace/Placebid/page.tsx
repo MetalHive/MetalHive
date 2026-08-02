@@ -44,7 +44,7 @@ export default function BidForm() {
         placeBid.mutate({
             listingId,
             bidPrice: parseFloat(formData.bidPrice.replace(/[^0-9.]/g, '')),
-            priceUnit: listing?.priceUnit || 'tonne',
+            priceUnit: listing?.priceUnit || 'kg',
             quantity: formData.quantity,
             message: formData.message || undefined,
         }, {
@@ -192,7 +192,7 @@ export default function BidForm() {
                                 <div>
                                     <p className="text-xs text-gray-500">Location</p>
                                     <p className="text-sm font-semibold text-gray-900">
-                                        {listing?.location || 'N/A'}, UK
+                                        {listing?.location || 'N/A'}
                                     </p>
                                 </div>
                             </div>

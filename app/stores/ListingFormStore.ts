@@ -41,7 +41,10 @@ const initialState = {
     quantity: '',
     quantityUnit: 'kg' as const,
     basePrice: '',
-    priceUnit: 'tonne' as const,
+    // Matches quantityUnit above: defaulting quantity to kg but price to tonne
+    // meant a seller who left both dropdowns alone priced per tonne against a
+    // kilogram quantity.
+    priceUnit: 'kg' as const,
     location: '',
     images: [],
     description: '',
