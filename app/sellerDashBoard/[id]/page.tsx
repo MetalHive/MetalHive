@@ -218,7 +218,7 @@ const ListingDetailPage: React.FC = () => {
                       Listed {new Date(listing.listedOn).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                     </p>
                     <p className="text-base font-semibold text-[#17181a]">
-                      {listing.bidsCount} bids
+                      {bids.length} {bids.length === 1 ? 'bid' : 'bids'}
                     </p>
                   </div>
 
@@ -315,8 +315,12 @@ const ListingDetailPage: React.FC = () => {
                             {bid.buyer.companyName || 'Anonymous Buyer'}
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-[#999999]">Region: NA</span>
-                            <span className="text-xs text-[#999999]">•</span>
+                            {bid.buyer.region && (
+                              <>
+                                <span className="text-xs text-[#999999]">Region: {bid.buyer.region}</span>
+                                <span className="text-xs text-[#999999]">•</span>
+                              </>
+                            )}
                             <div className="flex items-center gap-1">
                               <span className="text-xs text-[#999999]">{bid.buyer.rating || 4.2}</span>
                               <svg className="w-3 h-3 text-[#C9A227]" fill="currentColor" viewBox="0 0 20 20">
@@ -331,14 +335,19 @@ const ListingDetailPage: React.FC = () => {
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
                           <p className="text-xs text-[#999999] mb-1">QUANTITY</p>
+                          {/* bid.quantity already carries its unit ("30kg");
+                              appending offerPriceUnit rendered "30kg kg". */}
                           <p className="text-base font-bold text-[#17181a]">
-                            {bid.quantity} {bid.offerPriceUnit}
+                            {bid.quantity}
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-[#999999] mb-1">OFFER PRICE</p>
                           <p className="text-base font-bold text-[#17181a]">
-                            ${parseFloat(bid.offerPrice).toFixed(0)}
+                            ${parseFloat(bid.offerPrice).toFixed(2)}
+                            {bid.offerPriceUnit && (
+                              <span className="text-sm font-normal text-[#999999]"> / {bid.offerPriceUnit}</span>
+                            )}
                           </p>
                         </div>
                       </div>

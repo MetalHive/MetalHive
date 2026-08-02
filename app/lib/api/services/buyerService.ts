@@ -100,6 +100,7 @@ export interface BuyerBidDetail {
         title: string;
         images: string[];
         basePrice: number;
+        priceUnit: string;
         location: string;
         dateListed: string;
         description: string;

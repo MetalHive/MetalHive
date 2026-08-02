@@ -143,7 +143,9 @@ const ProductListing: React.FC<PreviewPublishProps> = ({ onBack }) => {
                                 <p className="text-4xl font-extrabold text-gray-900">
                                     ${productData.price}
                                 </p>
-                                <span className="text-lg text-gray-600">per tonne</span>
+                                <span className="text-lg text-gray-600">
+                                    per {formData.priceUnit || "kg"}
+                                </span>
                             </div>
 
                             {/* Details */}

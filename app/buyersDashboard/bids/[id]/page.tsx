@@ -4,6 +4,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft, MapPin, Package, Scale } from 'lucide-react';
 import { useBuyerBidDetail, useWithdrawBid, useAcceptCounterOffer, useRejectCounterOffer } from '../../../hooks/useBuyer';
 
+const formatDate = (value?: string | null) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? '—'
+    : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
 const BidsDetail = () => {
   const params = useParams();
   const router = useRouter();
@@ -124,7 +132,7 @@ const BidsDetail = () => {
             <div className='mt-7'>
               <h1 className="text-2xl font-bold mb-1">{bid.listing.title}</h1>
               <p className="text-sm text-gray-500 mb-4">
-                Offer received on {bid.listing.title}
+                Offer sent on {formatDate(bid.createdAt)}
               </p>
 
               {/* Description Section */}
@@ -141,21 +149,24 @@ const BidsDetail = () => {
                   <Package className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-xs text-gray-500">Base Price</p>
-                    <p className="text-sm font-semibold">${Number(bid.listing.basePrice || 0).toFixed(2)}</p>
+                    <p className="text-sm font-semibold">
+                      ${Number(bid.listing.basePrice || 0).toFixed(2)}
+                      {bid.listing.priceUnit && ` / ${bid.listing.priceUnit}`}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-xs text-gray-500">Location</p>
-                    <p className="text-sm font-semibold">{bid.listing.location}, UK</p>
+                    <p className="text-sm font-semibold">{bid.listing.location || '—'}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <Scale className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-xs text-gray-500">Date Listed</p>
-                    <p className="text-sm font-semibold">{bid.listing.dateListed}</p>
+                    <p className="text-sm font-semibold">{formatDate(bid.listing.dateListed)}</p>
                   </div>
                 </div>
               </div>

@@ -14,6 +14,9 @@ export interface Bid {
         name: string;
         companyName: string;
         verified: boolean;
+        rating?: number;
+        // Null when the buyer has no country or company address on file.
+        region?: string | null;
     };
     offerPrice: number;
     offerPriceUnit: string;
