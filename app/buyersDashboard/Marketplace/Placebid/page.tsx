@@ -6,7 +6,9 @@ import FormField from '@/app/Components/FormField';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMarketplaceListing, usePlaceBid } from '../../../hooks/useBuyer';
 
+import { useToast } from '@/app/Components/Toast';
 export default function BidForm() {
+    const toast = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
     const listingId = searchParams.get('listingId') || '';
@@ -63,11 +65,11 @@ export default function BidForm() {
             message: formData.message || undefined,
         }, {
             onSuccess: () => {
-                alert('Bid placed successfully!');
+                toast.success('Bid placed successfully!');
                 router.push('/buyersDashboard/bids');
             },
             onError: (error) => {
-                alert('Failed to place bid. Please try again.');
+                toast.error('Failed to place bid. Please try again.');
                 console.error('Bid error:', error);
             }
         });

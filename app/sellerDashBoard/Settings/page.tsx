@@ -5,7 +5,9 @@ import SettingsSidebar from "../../Components/SettingsSidebar";
 import { Upload } from 'lucide-react';
 import { useUserProfile, useUpdateProfile, useUploadProfilePicture } from '../../hooks/useSettings';
 
+import { useToast } from '@/app/Components/Toast';
 const SettingsPage = () => {
+    const toast = useToast();
     const { data: profile, isLoading: loadingProfile } = useUserProfile();
     const updateProfile = useUpdateProfile();
     const uploadPicture = useUploadProfilePicture();
@@ -51,10 +53,10 @@ const SettingsPage = () => {
             // Upload immediately
             try {
                 await uploadPicture.mutateAsync(file);
-                alert('Profile picture uploaded successfully!');
+                toast.success('Profile picture uploaded successfully!');
             } catch (error) {
                 console.error('Failed to upload picture:', error);
-                alert('Failed to upload profile picture. Please try again.');
+                toast.error('Failed to upload profile picture. Please try again.');
                 setPreviewUrl(profile?.profilePicture || '');
             }
         }
@@ -63,10 +65,10 @@ const SettingsPage = () => {
     const handleSaveChanges = async () => {
         try {
             await updateProfile.mutateAsync(formData);
-            alert('Profile updated successfully!');
+            toast.success('Profile updated successfully!');
         } catch (error) {
             console.error('Failed to update profile:', error);
-            alert('Failed to update profile. Please try again.');
+            toast.error('Failed to update profile. Please try again.');
         }
     };
 

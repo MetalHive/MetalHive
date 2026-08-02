@@ -6,7 +6,9 @@ import ProductCard from '../../components/marketPlaceCard';
 import Link from 'next/link';
 import { useMarketplaceListing, useSimilarListings, useSaveListing } from '../../../hooks/useBuyer';
 
+import { useToast } from '@/app/Components/Toast';
 const ScrapMetalListing = () => {
+  const toast = useToast();
   const params = useParams();
   const router = useRouter();
   const listingId = params.id as string;
@@ -20,8 +22,8 @@ const ScrapMetalListing = () => {
   const handleSaveListing = () => {
     if (listingId) {
       saveListing.mutate(listingId, {
-        onSuccess: () => alert('Listing saved!'),
-        onError: () => alert('Failed to save listing'),
+        onSuccess: () => toast.success('Listing saved!'),
+        onError: () => toast.error('Failed to save listing'),
       });
     }
   };

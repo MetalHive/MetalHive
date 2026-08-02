@@ -11,7 +11,9 @@ import { sellerSidebarLinks } from "../../lib/sidebarConfig";
 import { AcceptBidModal, CounterOfferModal, DeclineBidModal } from "../../Components/BidModals";
 import { SuccessModal } from "../../Components/Modals";
 
+import { useToast } from '@/app/Components/Toast';
 const ListingDetailPage: React.FC = () => {
+  const toast = useToast();
   const params = useParams();
   const router = useRouter(); const queryClient = useQueryClient();
   const listingId = params.id as string;
@@ -55,7 +57,7 @@ const ListingDetailPage: React.FC = () => {
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Failed to accept bid:', error);
-      alert('Failed to accept bid. Please try again.');
+      toast.error('Failed to accept bid. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -79,7 +81,7 @@ const ListingDetailPage: React.FC = () => {
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Failed to send counter offer:', error);
-      alert('Failed to send counter offer. Please try again.');
+      toast.error('Failed to send counter offer. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -99,7 +101,7 @@ const ListingDetailPage: React.FC = () => {
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Failed to decline bid:', error);
-      alert('Failed to decline bid. Please try again.');
+      toast.error('Failed to decline bid. Please try again.');
     } finally {
       setIsProcessing(false);
     }
