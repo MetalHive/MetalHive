@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft, MapPin, Package, Scale } from 'lucide-react';
 import { useBuyerBidDetail, useWithdrawBid, useAcceptCounterOffer, useRejectCounterOffer } from '../../../hooks/useBuyer';
 
+import { useToast } from '@/app/Components/Toast';
 const formatDate = (value?: string | null) => {
   if (!value) return '—';
   const date = new Date(value);
@@ -13,6 +14,7 @@ const formatDate = (value?: string | null) => {
 };
 
 const BidsDetail = () => {
+  const toast = useToast();
   const params = useParams();
   const router = useRouter();
   const bidId = params.id as string;
@@ -28,10 +30,10 @@ const BidsDetail = () => {
     if (confirm('Are you sure you want to withdraw this bid?')) {
       withdrawBid.mutate(bidId, {
         onSuccess: () => {
-          alert('Bid withdrawn successfully');
+          toast.success('Bid withdrawn successfully');
           router.push('/buyersDashboard/bids');
         },
-        onError: () => alert('Failed to withdraw bid'),
+        onError: () => toast.error('Failed to withdraw bid'),
       });
     }
   };
@@ -40,10 +42,10 @@ const BidsDetail = () => {
     if (bid?.latestCounterOffer) {
       acceptCounter.mutate(bidId, {
         onSuccess: () => {
-          alert('Counter offer accepted!');
+          toast.success('Counter offer accepted!');
           router.push('/buyersDashboard/bids');
         },
-        onError: () => alert('Failed to accept counter offer'),
+        onError: () => toast.error('Failed to accept counter offer'),
       });
     }
   };
@@ -52,10 +54,10 @@ const BidsDetail = () => {
     if (bid?.latestCounterOffer) {
       rejectCounter.mutate(bidId, {
         onSuccess: () => {
-          alert('Counter offer rejected');
+          toast.success('Counter offer rejected');
           router.refresh();
         },
-        onError: () => alert('Failed to reject counter offer'),
+        onError: () => toast.error('Failed to reject counter offer'),
       });
     }
   };

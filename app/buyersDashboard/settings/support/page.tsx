@@ -5,7 +5,9 @@ import { SettingsCard, TextInput, SettingsButton } from '../../../Components/Set
 import { Mail, MessageCircle, Phone } from 'lucide-react';
 import { useCreateSupportTicket, useUserProfile } from '../../../hooks/useSettings';
 
+import { useToast } from '@/app/Components/Toast';
 const HelpSupportPage = () => {
+    const toast = useToast();
     const createTicket = useCreateSupportTicket();
     const { data: profile } = useUserProfile();
 
@@ -17,17 +19,17 @@ const HelpSupportPage = () => {
 
     const handleSubmit = async () => {
         if (!formData.subject || !formData.email || !formData.message) {
-            alert('Please fill in all fields');
+            toast.error('Please fill in all fields');
             return;
         }
 
         try {
             const result = await createTicket.mutateAsync(formData);
-            alert(`Your message has been sent successfully! Ticket ID: ${result.ticketId}`);
+            toast.success(`Your message has been sent successfully! Ticket ID: ${result.ticketId}`);
             setFormData({ subject: '', email: profile?.email || '', message: '' });
         } catch (error) {
             console.error('Failed to send support message:', error);
-            alert('Failed to send message. Please try again.');
+            toast.error('Failed to send message. Please try again.');
         }
     };
 

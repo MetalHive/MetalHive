@@ -9,6 +9,7 @@ import { useBidDetail } from "@/app/hooks/useApi";
 import { AcceptBidModal, CounterOfferModal, DeclineBidModal } from "@/app/Components/BidModals";
 import { SuccessModal } from "@/app/Components/Modals";
 
+import { useToast } from '@/app/Components/Toast';
 const formatDateTime = (value?: string | null) => {
   if (!value) return "";
   const date = new Date(value);
@@ -24,6 +25,7 @@ const formatDateTime = (value?: string | null) => {
 };
 
 export default function BidDetails() {
+  const toast = useToast();
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -55,7 +57,7 @@ export default function BidDetails() {
       });
     } catch (err) {
       console.error("Failed to accept bid:", err);
-      alert("Failed to accept bid. Please try again.");
+      toast.error("Failed to accept bid. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -74,7 +76,7 @@ export default function BidDetails() {
       setSuccess({ title: "Counter offer sent", message: "The buyer has been notified." });
     } catch (err) {
       console.error("Failed to send counter offer:", err);
-      alert("Failed to send counter offer. Please try again.");
+      toast.error("Failed to send counter offer. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -89,7 +91,7 @@ export default function BidDetails() {
       setSuccess({ title: "Offer declined", message: "The buyer has been notified." });
     } catch (err) {
       console.error("Failed to decline bid:", err);
-      alert("Failed to decline bid. Please try again.");
+      toast.error("Failed to decline bid. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

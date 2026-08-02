@@ -4,7 +4,9 @@ import React, { useState } from 'react';
 import { SettingsCard, TextInput, SettingsButton, SettingsSection } from '../../../Components/SettingsComponents';
 import { Upload, FileText, Briefcase } from 'lucide-react';
 
+import { useToast } from '@/app/Components/Toast';
 const VerificationPage = () => {
+    const toast = useToast();
     const [formData, setFormData] = useState({
         businessName: '',
         registrationNumber: '',
@@ -44,7 +46,7 @@ const VerificationPage = () => {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1500));
         console.log('Verification data:', { ...formData, ...files });
-        alert('Verification request submitted successfully! We will review your documents shortly.');
+        toast.success('Verification request submitted successfully! We will review your documents shortly.');
         setIsSubmitting(false);
     };
 
