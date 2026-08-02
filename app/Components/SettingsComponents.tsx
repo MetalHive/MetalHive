@@ -89,9 +89,11 @@ interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     label: string;
     value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    error?: string;
+    hint?: string;
 }
 
-export const TextInput: React.FC<TextInputProps> = ({ label, value, onChange, ...props }) => {
+export const TextInput: React.FC<TextInputProps> = ({ label, value, onChange, error, hint, ...props }) => {
     return (
         <div>
             <label className="block text-sm font-medium text-[#17181a] mb-2">
@@ -101,9 +103,19 @@ export const TextInput: React.FC<TextInputProps> = ({ label, value, onChange, ..
                 type="text"
                 value={value}
                 onChange={onChange}
-                className="w-full px-4 py-3 border border-[#ececec] rounded-lg text-sm text-[#17181a] placeholder:text-[#999999] focus:outline-none focus:border-[#C9A227]"
+                aria-invalid={error ? true : undefined}
+                className={`w-full px-4 py-3 border rounded-lg text-sm text-[#17181a] placeholder:text-[#999999] focus:outline-none ${
+                    error
+                        ? 'border-red-400 focus:border-red-500'
+                        : 'border-[#ececec] focus:border-[#C9A227]'
+                }`}
                 {...props}
             />
+            {error ? (
+                <p className="mt-1 text-xs text-red-600">{error}</p>
+            ) : hint ? (
+                <p className="mt-1 text-xs text-[#737780]">{hint}</p>
+            ) : null}
         </div>
     );
 };
