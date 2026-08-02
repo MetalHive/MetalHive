@@ -3,6 +3,7 @@ import { interDisplay } from "./fonts";
 import "./globals.css";
 import { ReactQueryProvider } from "./providers/ReactQueryProvider";
 import { AuthInitializer } from "./Components/AuthInitializer";
+import { ToastProvider } from "./Components/Toast";
 
 
 
@@ -25,9 +26,11 @@ export default function RootLayout({
         className={`${interDisplay.variable}`}
       >
         <ReactQueryProvider>
-          <AuthInitializer>
-            {children}
-          </AuthInitializer>
+          <ToastProvider>
+            <AuthInitializer>
+              {children}
+            </AuthInitializer>
+          </ToastProvider>
         </ReactQueryProvider>
       </body>
     </html>
