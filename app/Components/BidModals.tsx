@@ -101,12 +101,16 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
 }) => {
     const [counterPrice, setCounterPrice] = useState(bid.offerPrice);
     const [message, setMessage] = useState('');
+    const [priceError, setPriceError] = useState('');
 
     const handleSubmit = () => {
+        // Inline rather than a toast: the field is right here, and a toast
+        // would have to compete with the modal overlay for stacking order.
         if (!counterPrice || parseFloat(counterPrice) <= 0) {
-            alert('Please enter a valid price');
+            setPriceError('Enter a price greater than zero.');
             return;
         }
+        setPriceError('');
         onSubmit(parseFloat(counterPrice), message || undefined);
     };
 
@@ -133,10 +137,17 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
                     <input
                         type="number"
                         value={counterPrice}
-                        onChange={(e) => setCounterPrice(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#ececec] rounded-lg text-lg font-semibold text-[#17181a] focus:outline-none focus:border-[#C9A227]"
+                        onChange={(e) => {
+                            setCounterPrice(e.target.value);
+                            setPriceError('');
+                        }}
+                        aria-invalid={priceError ? true : undefined}
+                        className={`w-full px-4 py-3 border rounded-lg text-lg font-semibold text-[#17181a] focus:outline-none ${
+                            priceError ? 'border-red-400 focus:border-red-500' : 'border-[#ececec] focus:border-[#C9A227]'
+                        }`}
                         placeholder="$500"
                     />
+                    {priceError && <p className="mt-1 text-xs text-red-600">{priceError}</p>}
                 </div>
 
                 {/* Message Input */}

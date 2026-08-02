@@ -4,7 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Upload } from 'lucide-react';
 import { useBuyerProfile, useUpdateBuyerProfile, useUploadBuyerLogo } from '../../hooks/useBuyer';
 
+import { useToast } from '@/app/Components/Toast';
 const SettingsPage = () => {
+    const toast = useToast();
     const { data: profile, isLoading: loadingProfile } = useBuyerProfile();
     const updateProfile = useUpdateBuyerProfile();
     const uploadLogo = useUploadBuyerLogo();
@@ -50,10 +52,10 @@ const SettingsPage = () => {
             // Upload immediately
             try {
                 await uploadLogo.mutateAsync(file);
-                alert('Profile logo uploaded successfully!');
+                toast.success('Profile logo uploaded successfully!');
             } catch (error) {
                 console.error('Failed to upload logo:', error);
-                alert('Failed to upload profile logo. Please try again.');
+                toast.error('Failed to upload profile logo. Please try again.');
                 setPreviewUrl(profile?.companyLogo || '');
             }
         }
@@ -62,10 +64,10 @@ const SettingsPage = () => {
     const handleSaveChanges = async () => {
         try {
             await updateProfile.mutateAsync(formData);
-            alert('Profile updated successfully!');
+            toast.success('Profile updated successfully!');
         } catch (error) {
             console.error('Failed to update profile:', error);
-            alert('Failed to update profile. Please try again.');
+            toast.error('Failed to update profile. Please try again.');
         }
     };
 

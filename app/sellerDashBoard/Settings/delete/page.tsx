@@ -7,7 +7,9 @@ import { SettingsCard, PasswordInput } from "../../../Components/SettingsCompone
 import { SuccessModal } from "../../../Components/Modals";
 import { useDeleteAccount } from '../../../hooks/useSettings';
 
+import { useToast } from '@/app/Components/Toast';
 const DeleteAccountPage = () => {
+    const toast = useToast();
     const router = useRouter();
     const deleteAccount = useDeleteAccount();
 
@@ -31,7 +33,7 @@ const DeleteAccountPage = () => {
 
     const handleConfirmDelete = async () => {
         if (!password) {
-            alert('Please enter your password to confirm');
+            toast.error('Please enter your password to confirm');
             return;
         }
 
@@ -42,11 +44,11 @@ const DeleteAccountPage = () => {
         } catch (error: any) {
             console.error('Failed to delete account:', error);
             if (error.response?.data?.errors?.code === 'ACTIVE_TRANSACTIONS') {
-                alert('Cannot delete account with active bids or pending transactions');
+                toast.error('Cannot delete account with active bids or pending transactions');
             } else if (error.response?.data?.errors?.code === 'INVALID_PASSWORD') {
-                alert('Incorrect password');
+                toast.error('Incorrect password');
             } else {
-                alert('Failed to delete account. Please try again.');
+                toast.error('Failed to delete account. Please try again.');
             }
         }
     };

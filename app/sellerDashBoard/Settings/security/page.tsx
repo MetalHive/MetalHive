@@ -5,7 +5,9 @@ import SettingsSidebar from "../../../Components/SettingsSidebar";
 import { SettingsCard, SettingsSection, PasswordInput, TextInput, SettingsButton } from "../../../Components/SettingsComponents";
 import { useUserProfile, useChangeEmail, useChangePassword } from '../../../hooks/useSettings';
 
+import { useToast } from '@/app/Components/Toast';
 const SecurityPage = () => {
+    const toast = useToast();
     const { data: profile } = useUserProfile();
     const changeEmail = useChangeEmail();
     const changePassword = useChangePassword();
@@ -21,7 +23,7 @@ const SecurityPage = () => {
 
     const handleChangeEmail = async () => {
         if (!email || !currentPasswordForEmail) {
-            alert('Please enter new email and current password');
+            toast.error('Please enter new email and current password');
             return;
         }
 
@@ -30,27 +32,27 @@ const SecurityPage = () => {
                 newEmail: email,
                 currentPassword: currentPasswordForEmail,
             });
-            alert('Email changed successfully! Please verify your new email.');
+            toast.success('Email changed successfully! Please verify your new email.');
             setEmail('');
             setCurrentPasswordForEmail('');
         } catch (error: any) {
             console.error('Failed to change email:', error);
             if (error.response?.data?.errors?.code === 'INVALID_PASSWORD') {
-                alert('Current password is incorrect');
+                toast.error('Current password is incorrect');
             } else {
-                alert('Failed to change email. Please try again.');
+                toast.error('Failed to change email. Please try again.');
             }
         }
     };
 
     const handleChangePassword = async () => {
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            alert('Passwords do not match!');
+            toast.error('Passwords do not match!');
             return;
         }
 
         if (passwordData.newPassword.length < 8) {
-            alert('Password must be at least 8 characters long!');
+            toast.error('Password must be at least 8 characters long!');
             return;
         }
 
@@ -64,13 +66,13 @@ const SecurityPage = () => {
                 newPassword: '',
                 confirmPassword: '',
             });
-            alert('Password changed successfully!');
+            toast.success('Password changed successfully!');
         } catch (error: any) {
             console.error('Failed to change password:', error);
             if (error.response?.data?.errors?.code === 'INVALID_PASSWORD') {
-                alert('Current password is incorrect');
+                toast.error('Current password is incorrect');
             } else {
-                alert('Failed to change password. Please try again.');
+                toast.error('Failed to change password. Please try again.');
             }
         }
     };
