@@ -129,12 +129,14 @@ const Page = () => {
                 <div className="relative">
                   <ProductCard
                     id={bid.id}
-                    title={bid.listing.title}
-                    price={`$${bid.listing.basePrice}`}
+                    title={bid.listing.title || bid.listing.name || 'Listing'}
+                    price={`$${Number(bid.listing.basePrice || 0).toFixed(2)}${bid.listing.priceUnit ? ` / ${bid.listing.priceUnit}` : ''}`}
 
                     location={bid.listing.location}
                     timeAgo={new Date(bid.createdAt).toLocaleDateString()}
-                    description={`Your offer: $${bid.offerAmount} - ${bid.quantity}`}
+                    // offerAmount does not exist on the payload — the field is
+                    // offerPrice, and it is a price per unit, not a total.
+                    description={`Your offer: $${Number(bid.offerPrice || 0).toFixed(2)}${bid.offerPriceUnit ? `/${bid.offerPriceUnit}` : ''} × ${bid.quantity}${bid.totalAmount ? ` = $${Number(bid.totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ''}`}
                     images={[bid.listing.image]}
                   />
                   <span className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium ${statusBadge.color}`}>

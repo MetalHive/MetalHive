@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { IoFilter } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
@@ -22,6 +23,7 @@ interface Listing {
 }
 
 const ListingsDashboard = () => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'active' | 'sold' | 'inactive'>('active');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -211,7 +213,10 @@ const ListingsDashboard = () => {
                     </div>
 
                     <div className="col-span-2 flex items-center">
-                      <button className="px-4 py-2 text-[#C9A227] rounded-md font-medium text-sm transition-colors">
+                      <button
+                        onClick={() => router.push(`/sellerDashBoard/${listing.id}`)}
+                        className="px-4 py-2 text-[#C9A227] rounded-md font-medium text-sm transition-colors hover:underline"
+                      >
                         View Listing
                       </button>
                     </div>

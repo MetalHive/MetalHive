@@ -76,11 +76,19 @@ export interface BuyerBid {
     listing: {
         id: string;
         title: string;
+        // The API has always sent `name`; `title` was added alongside it.
+        name?: string;
         image: string;
         location: string;
         basePrice: number;
+        priceUnit?: string;
+        status?: string;
     };
-    offerAmount: number;
+    // The API sends offerPrice (a price per unit), never offerAmount — the
+    // bids list read the declared-but-absent field and rendered "$undefined".
+    offerPrice: number;
+    offerPriceUnit?: string;
+    totalAmount?: string | null;
     quantity: string;
     status: 'pending' | 'countered' | 'accepted' | 'rejected' | 'withdrawn';
     message: string;

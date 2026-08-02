@@ -27,7 +27,9 @@ export default function FeatureCards() {
       title: "Edit Profile",
       description: "Update your account or contact info",
       action: "Update Profile",
-      href: "/sellerDashBoard/edit-profile", // <-- page link
+      // /sellerDashBoard/edit-profile was never built — 404. Settings is the
+      // profile editor.
+      href: "/sellerDashBoard/Settings",
       bgColor: "bg-amber-50",
       iconColor: "text-amber-600"
     }
