@@ -55,10 +55,18 @@ export interface BidDetail {
         event: string;
         label: string;
         timestamp: string | null;
-        data?: Record<string, any>;
+        data?: Record<string, unknown>;
     }>;
     createdAt: string;
     expiresAt: string;
+}
+
+export interface SellerBidCounts {
+    pending: number;
+    countered: number;
+    accepted: number;
+    rejected: number;
+    all?: number;
 }
 
 export interface BidsResponse {
@@ -68,7 +76,9 @@ export interface BidsResponse {
         page: number;
         limit: number;
         pages: number;
+        totalPages?: number;
     };
+    counts?: SellerBidCounts;
 }
 
 const bidsService = {

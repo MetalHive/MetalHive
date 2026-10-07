@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { ChevronLeft } from "lucide-react";
 import FormField from "@/app/Components/FormField";
 import { useListingFormStore } from "@/app/stores/ListingFormStore";
@@ -10,8 +10,7 @@ interface DescriptionProps {
 }
 
 export default function Description({ onBack }: DescriptionProps) {
-  const { description, additional_notes, updateDescription, updateAdditionalNotes } = useListingFormStore();
-  const [errors, setErrors] = useState<{ description?: string }>({});
+  const { description, additionalNotes, updateDescription, updateAdditionalNotes } = useListingFormStore();
 
   return (
     <div className="max-w-xl mt-6">
@@ -41,7 +40,6 @@ export default function Description({ onBack }: DescriptionProps) {
         type="textarea"
         value={description}
         onChange={(e) => updateDescription(e.target.value)}
-        error={errors.description}
       />
 
       {/* Additional Notes Textarea */}
@@ -50,7 +48,7 @@ export default function Description({ onBack }: DescriptionProps) {
           label="Additional Notes (Optional)"
           placeholder="e.g. Minimum order 100 kg, Forklift available for loading, Pickup between 9 AM - 5 PM"
           type="textarea"
-          value={additional_notes}
+          value={additionalNotes}
           onChange={(e) => updateAdditionalNotes(e.target.value)}
         />
       </div>

@@ -1,5 +1,6 @@
 "use client"
 import React from "react";
+import Link from "next/link";
 import { FaInstagram, FaTwitter, FaFacebookF, FaLinkedinIn } from "react-icons/fa";
 
 const Footer = () => {
@@ -26,11 +27,10 @@ const Footer = () => {
         <div>
           <h3 className="font-semibold text-white text-xs mb-1">Company</h3>
           <ul className="space-y-1 text-[10px]">
-            <li>About Us</li>
-            <li>How It Works</li>
-            <li>Marketplace</li>
-            <li>Pricing</li>
-            <li>Contact</li>
+            <li><Link href="/#about" className="hover:text-white">About Us</Link></li>
+            <li><Link href="/#how" className="hover:text-white">How It Works</Link></li>
+            <li><Link href="/auth" className="hover:text-white">Marketplace</Link></li>
+            <li><Link href="/#contact" className="hover:text-white">Contact</Link></li>
           </ul>
         </div>
 
@@ -50,10 +50,7 @@ const Footer = () => {
         <div>
           <h3 className="font-semibold text-white text-xs mb-1">Legal</h3>
           <ul className="space-y-1 text-[10px]">
-            <li>Terms & Conditions</li>
-            <li>Privacy Policy</li>
-            <li>Verification Policy</li>
-            <li>Refund Policy</li>
+            <li><Link href="/terms" className="hover:text-white">Terms & Conditions</Link></li>
           </ul>
         </div>
 
@@ -72,8 +69,7 @@ const Footer = () => {
       <div className="flex flex-col md:flex-row justify-between items-center mt-4 text-[9px] text-gray-500">
         <p>© 2025 Metal Hive. All rights reserved.</p>
         <div className="flex items-center space-x-3 mt-1 md:mt-0">
-          <a href="#" className="hover:underline">Privacy Policy</a>
-          <a href="#" className="hover:underline">Terms of Service</a>
+          <Link href="/terms" className="hover:underline">Terms of Service</Link>
           <div className="flex space-x-2 ml-2">
             <FaInstagram className="hover:text-white text-[10px]" />
             <FaTwitter className="hover:text-white text-[10px]" />

@@ -1,21 +1,20 @@
 "use client"
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { MapPin, Clock } from 'lucide-react';
 
+const PLACEHOLDER_IMAGE = '/bid1.png';
+
 interface ProductCardProps {
-    id: string; // <-- added id
+    id: string;
     title: string;
     price: string;
     location: string;
     timeAgo: string;
     description: string;
-    images: string[];
-    
+    images?: Array<string | null | undefined> | null;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
-    id,
     title,
     price,
     location,
@@ -23,38 +22,40 @@ const ProductCard: React.FC<ProductCardProps> = ({
     description,
     images,
 }) => {
-    const router = useRouter();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    // Listings may have no images (or null entries); never render <img src={null}>.
+    const safeImages = (images || []).filter((url): url is string => typeof url === 'string' && url.length > 0);
+    const displayImages = safeImages.length > 0 ? safeImages : [PLACEHOLDER_IMAGE];
+    const activeIndex = Math.min(currentImageIndex, displayImages.length - 1);
 
     const goToSlide = (index: number) => {
         setCurrentImageIndex(index);
     };
 
-   
-
     return (
         <div
-            
             className="w-full rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
         >
             {/* Image Carousel */}
             <div className="relative h-48 bg-gray-200">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                    src={images[currentImageIndex]}
-                    alt={`${title} - Image ${currentImageIndex + 1}`}
+                    src={displayImages[activeIndex]}
+                    alt={`${title} - Image ${activeIndex + 1}`}
                     className="w-full h-full object-cover"
                 />
 
                 {/* Carousel Dots */}
                 <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5">
-                    {images.map((_, index) => (
+                    {displayImages.length > 1 && displayImages.map((_, index) => (
                         <button
                             key={index}
                             onClick={(e) => {
                                 e.stopPropagation(); 
                                 goToSlide(index);
                             }}
-                            className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentImageIndex
+                            className={`w-1.5 h-1.5 rounded-full transition-all ${index === activeIndex
                                     ? 'bg-white w-4'
                                     : 'bg-white/60 hover:bg-white/80'
                                 }`}

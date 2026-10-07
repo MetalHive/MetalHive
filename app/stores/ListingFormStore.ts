@@ -1,15 +1,18 @@
 import { create } from 'zustand';
-import { CreateListingData } from '../lib/api/services/listingsService';
+import { CreateListingData, WeightUnit } from '../lib/api/services/listingsService';
 
-interface ListingFormState {
+export type MaterialType = 'Copper' | 'Aluminium' | 'Steel';
+export type ConditionType = 'Processed' | 'Unprocessed' | 'Mixed';
+
+interface ListingFormValues {
     // Step 1: Basic Details
     materialName: string;
-    materialType: 'Copper' | 'Aluminium' | 'Steel' | '';
-    condition: 'Processed' | 'Unprocessed' | 'Mixed' | '';
+    materialType: MaterialType | '';
+    condition: ConditionType | '';
     quantity: string;
-    quantityUnit: 'kg' | 'tonne' | 'g' | 'lb';
+    quantityUnit: WeightUnit;
     basePrice: string;
-    priceUnit: 'kg' | 'tonne' | 'g' | 'lb';
+    priceUnit: WeightUnit;
     location: string;
 
     // Step 2: Images
@@ -17,14 +20,16 @@ interface ListingFormState {
 
     // Step 3: Description
     description: string;
-    additional_notes: string;
+    additionalNotes: string;
 
     // Form state
     currentStep: number;
     isSubmitting: boolean;
+}
 
+interface ListingFormState extends ListingFormValues {
     // Actions
-    updateBasicDetails: (data: Partial<ListingFormState>) => void;
+    updateBasicDetails: (data: Partial<ListingFormValues>) => void;
     updateImages: (images: string[]) => void;
     updateDescription: (description: string) => void;
     updateAdditionalNotes: (notes: string) => void;
@@ -32,25 +37,32 @@ interface ListingFormState {
     setIsSubmitting: (isSubmitting: boolean) => void;
     resetForm: () => void;
     getFormData: () => CreateListingData;
+    /** Field-level errors for the given wizard step; empty object when valid. */
+    validateStep: (step: number) => Record<string, string>;
 }
 
-const initialState = {
+const initialState: ListingFormValues = {
     materialName: '',
-    materialType: '' as '',
-    condition: '' as '',
+    materialType: '',
+    condition: '',
     quantity: '',
-    quantityUnit: 'kg' as const,
+    quantityUnit: 'kg',
     basePrice: '',
     // Matches quantityUnit above: defaulting quantity to kg but price to tonne
     // meant a seller who left both dropdowns alone priced per tonne against a
     // kilogram quantity.
-    priceUnit: 'kg' as const,
+    priceUnit: 'kg',
     location: '',
     images: [],
     description: '',
-    additional_notes: '',
+    additionalNotes: '',
     currentStep: 1,
     isSubmitting: false,
+};
+
+const isPositiveNumber = (value: string) => {
+    const n = parseFloat(value.replace(/[^0-9.]/g, ''));
+    return Number.isFinite(n) && n > 0;
 };
 
 export const useListingFormStore = create<ListingFormState>((set, get) => ({
@@ -62,7 +74,7 @@ export const useListingFormStore = create<ListingFormState>((set, get) => ({
 
     updateDescription: (description) => set({ description }),
 
-    updateAdditionalNotes: (additional_notes) => set({ additional_notes }),
+    updateAdditionalNotes: (additionalNotes) => set({ additionalNotes }),
 
     setCurrentStep: (currentStep) => set({ currentStep }),
 
@@ -70,21 +82,44 @@ export const useListingFormStore = create<ListingFormState>((set, get) => ({
 
     resetForm: () => set(initialState),
 
+    validateStep: (step) => {
+        const state = get();
+        const errors: Record<string, string> = {};
+
+        if (step === 1) {
+            if (!state.materialName.trim()) errors.materialName = 'Material name is required';
+            if (!state.materialType) errors.materialType = 'Select a material type';
+            if (!state.condition) errors.condition = 'Select a condition';
+            if (!state.quantity.trim()) errors.quantity = 'Estimated weight is required';
+            else if (!isPositiveNumber(state.quantity)) errors.quantity = 'Enter a weight greater than zero';
+            if (!state.basePrice.trim()) errors.basePrice = 'Price is required';
+            else if (!isPositiveNumber(state.basePrice)) errors.basePrice = 'Enter a price greater than zero';
+            if (!state.location.trim()) errors.location = 'Location is required';
+        }
+
+        if (step === 2) {
+            if (state.images.length === 0) errors.images = 'Upload at least one photo of your material';
+        }
+
+        // Step 3 (description) is optional; step 4 is the preview.
+        return errors;
+    },
+
     getFormData: (): CreateListingData => {
         const state = get();
         return {
-            materialName: state.materialName,
-            materialType: state.materialType as 'Copper' | 'Aluminium' | 'Steel',
-            condition: state.condition as 'Processed' | 'Unprocessed' | 'Mixed',
+            materialName: state.materialName.trim(),
+            materialType: state.materialType as MaterialType,
+            condition: state.condition as ConditionType,
             // The seller's own unit is preserved for display; the backend
             // normalises to kilograms internally.
             quantity: `${state.quantity}${state.quantityUnit}`,
             quantityValue: state.quantity,
             quantityUnit: state.quantityUnit,
             basePrice: state.basePrice,
-            location: state.location,
+            location: state.location.trim(),
             description: state.description,
-            additional_notes: state.additional_notes,
+            additionalNotes: state.additionalNotes,
             images: state.images,
             priceUnit: state.priceUnit,
         };

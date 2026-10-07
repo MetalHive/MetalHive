@@ -6,6 +6,7 @@ import {
     walletService,
     historyService,
 } from '../lib/api/services';
+import type { CreateListingData } from '../lib/api/services/listingsService';
 
 // Dashboard hooks
 export const useDashboardStats = (period: '24hours' | '7days' | '2weeks' | '30days' = '30days') => {
@@ -52,7 +53,7 @@ export const useUpdateListing = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) =>
+        mutationFn: ({ id, data }: { id: string; data: Partial<CreateListingData> }) =>
             listingsService.updateListing(id, data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['listing', variables.id] });
@@ -133,6 +134,7 @@ export const useRejectBid = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['bid', variables.id] });
             queryClient.invalidateQueries({ queryKey: ['bids'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
         },
     });
 };
@@ -146,6 +148,7 @@ export const useCounterOffer = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['bid', variables.id] });
             queryClient.invalidateQueries({ queryKey: ['bids'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
         },
     });
 };

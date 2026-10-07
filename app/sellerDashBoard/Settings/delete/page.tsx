@@ -6,12 +6,16 @@ import SettingsSidebar from "../../../Components/SettingsSidebar";
 import { SettingsCard, PasswordInput } from "../../../Components/SettingsComponents";
 import { SuccessModal } from "../../../Components/Modals";
 import { useDeleteAccount } from '../../../hooks/useSettings';
+import { clearAuth } from '@/app/lib/api/auth';
+import { useAuthStore } from '@/app/stores/AuthStore';
+import { getErrorCode, getErrorMessage } from '@/app/lib/api/client';
 
 import { useToast } from '@/app/Components/Toast';
 const DeleteAccountPage = () => {
     const toast = useToast();
     const router = useRouter();
     const deleteAccount = useDeleteAccount();
+    const setUser = useAuthStore((s) => s.setUser);
 
     const [reason, setReason] = useState('');
     const [password, setPassword] = useState('');
@@ -39,16 +43,20 @@ const DeleteAccountPage = () => {
 
         try {
             await deleteAccount.mutateAsync({ reason, password });
+            // The account is gone: drop the local session so no further
+            // authenticated calls (or auto-redirects back in) happen.
+            clearAuth();
+            setUser(null);
             setShowPasswordInput(false);
             setShowSuccessModal(true);
-        } catch (error: any) {
-            console.error('Failed to delete account:', error);
-            if (error.response?.data?.errors?.code === 'ACTIVE_TRANSACTIONS') {
-                toast.error('Cannot delete account with active bids or pending transactions');
-            } else if (error.response?.data?.errors?.code === 'INVALID_PASSWORD') {
+        } catch (error: unknown) {
+            const code = getErrorCode(error);
+            if (code === 'ACTIVE_TRANSACTIONS') {
+                toast.error(getErrorMessage(error, 'Cannot delete account with active listings, bids or pending transactions'));
+            } else if (code === 'INVALID_PASSWORD') {
                 toast.error('Incorrect password');
             } else {
-                toast.error('Failed to delete account. Please try again.');
+                toast.error(getErrorMessage(error, 'Failed to delete account. Please try again.'));
             }
         }
     };

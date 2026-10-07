@@ -3,16 +3,26 @@
 import { useState } from "react";
 import { Download, Search } from "lucide-react";
 import { usePurchaseHistory, useExportPurchaseHistory } from "../../hooks/useBuyer";
+import { useDebouncedValue } from "../../hooks/useDebounce";
+import Pagination from "@/app/Components/Pagination";
+import { formatDate } from "@/app/lib/utils/formatters";
+import { getErrorMessage } from "@/app/lib/api/client";
+import { useToast } from "@/app/Components/Toast";
 
-export default function PayoutHistory() {
+export default function PurchaseHistoryPage() {
+  const toast = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [page, setPage] = useState(1);
+
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
 
   const { data, isLoading, error } = usePurchaseHistory({
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
+    page,
   });
 
   const exportHistory = useExportPurchaseHistory();
@@ -20,13 +30,15 @@ export default function PayoutHistory() {
   const purchases = data?.purchases || [];
   const summary = data?.summary || {
     totalSpent: 0,
-    completed: 0,
-    pending: 0,
-    allTime: 0,
+    totalPurchases: 0,
+    completedPurchases: 0,
+    pendingPurchases: 0,
   };
 
   const handleExport = () => {
-    exportHistory.mutate();
+    exportHistory.mutate(undefined, {
+      onError: (err) => toast.error(getErrorMessage(err, 'Failed to export purchase history')),
+    });
   };
 
   return (
@@ -52,10 +64,13 @@ export default function PayoutHistory() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Spent" value={`$${summary.totalSpent?.toLocaleString() || 0}`} />
-        <StatCard label="Completed" value={summary.completed || 0} />
-        <StatCard label="Pending" value={summary.pending || 0} />
-        <StatCard label="All Time" value={summary.allTime || 0} />
+        <StatCard
+          label="Total Spent"
+          value={`$${Number(summary.totalSpent || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+        />
+        <StatCard label="Completed" value={summary.completedPurchases || 0} />
+        <StatCard label="Pending" value={summary.pendingPurchases || 0} />
+        <StatCard label="All Time" value={summary.totalPurchases || 0} />
       </div>
 
       {/* Filters */}
@@ -64,13 +79,13 @@ export default function PayoutHistory() {
           <input
             type="date"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
             className="shadow-sm px-3 py-2 rounded-md text-sm border border-gray-200"
           />
           <input
             type="date"
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
             className="shadow-sm px-3 py-2 rounded-md text-sm border border-gray-200"
           />
         </div>
@@ -80,7 +95,7 @@ export default function PayoutHistory() {
           <input
             placeholder="Search"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             className="pl-9 pr-3 py-2 shadow-sm rounded-md text-sm border border-gray-200"
           />
         </div>
@@ -114,8 +129,8 @@ export default function PayoutHistory() {
             <div className="col-span-4">Reference ID</div>
             <div className="col-span-4">Date</div>
             <div className="col-span-4">Listing</div>
-            <div className="col-span-4">Seller</div>
-            <div className="col-span-5">Amount</div>
+            <div className="col-span-5">Seller</div>
+            <div className="col-span-4">Amount</div>
             <div className="col-span-3">Status</div>
           </div>
           <div className="divide-y divide-gray-200">
@@ -125,28 +140,29 @@ export default function PayoutHistory() {
                 className="grid grid-cols-24 items-center px-6 py-4 hover:bg-gray-50 transition-colors text-sm"
               >
                 <div className="col-span-4 px-2">
-                  <p className="font-medium text-gray-900">#{item.id}</p>
+                  <p className="font-medium text-gray-900 truncate" title={String(item.id)}>#{item.id}</p>
                 </div>
 
                 <div className="col-span-4 px-2 text-gray-700">
-                  {new Date(item.date).toLocaleDateString()}
+                  {formatDate(item.date)}
                 </div>
 
                 <div className="col-span-4 px-2 text-gray-700 flex items-center gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={item.listing.image || '/bid1.png'}
-                    alt={item.listing.name}
+                    src={item.listing?.image || '/bid1.png'}
+                    alt={item.listing?.name || 'Listing'}
                     className="w-8 h-8 rounded object-cover"
                   />
-                  {item.listing.name}
+                  <span className="truncate">{item.listing?.name || 'Listing removed'}</span>
                 </div>
 
-                <div className="col-span-5 px-2 text-gray-700">
-                  {item.seller.name}
+                <div className="col-span-5 px-2 text-gray-700 truncate">
+                  {item.seller?.name || '—'}
                 </div>
 
                 <div className="col-span-4 px-2 font-medium text-gray-900">
-                  ${item.amount?.toLocaleString()}
+                  ${Number(item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
 
                 <div className="col-span-3 px-2 flex justify-end">
@@ -156,6 +172,10 @@ export default function PayoutHistory() {
             ))}
           </div>
         </>
+      )}
+
+      {!isLoading && !error && (
+        <Pagination page={page} pagination={data?.pagination} onPageChange={setPage} />
       )}
     </div>
   );
@@ -174,8 +194,9 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
 
 function StatusBadge({ status }: { status: string }) {
   const base = "px-3 py-1 rounded-full text-xs font-medium";
+  const normalized = (status || '').toLowerCase();
 
-  if (status === "processing" || status === "Processing") {
+  if (normalized === "processing" || normalized === "pending") {
     return <span className={`${base} bg-orange-100 text-orange-600`}>Processing</span>;
   }
 

@@ -5,6 +5,7 @@ import SettingsSidebar from "../../../Components/SettingsSidebar";
 import { SettingsCard, TextInput, SettingsButton } from "../../../Components/SettingsComponents";
 import { Mail, MessageCircle, Phone } from 'lucide-react';
 import { useCreateSupportTicket, useUserProfile } from '../../../hooks/useSettings';
+import { getErrorMessage } from '@/app/lib/api/client';
 
 import { useToast } from '@/app/Components/Toast';
 const HelpSupportPage = () => {
@@ -12,25 +13,27 @@ const HelpSupportPage = () => {
     const createTicket = useCreateSupportTicket();
     const { data: profile } = useUserProfile();
 
-    const [formData, setFormData] = useState({
-        subject: '',
-        email: profile?.email || '',
-        message: '',
-    });
+    const [subject, setSubject] = useState('');
+    const [message, setMessage] = useState('');
+    // `null` means "not edited yet": the field shows the profile email as soon
+    // as it loads, and keeps the user's own value once they type.
+    const [emailOverride, setEmailOverride] = useState<string | null>(null);
+    const email = emailOverride ?? profile?.email ?? '';
 
     const handleSubmit = async () => {
-        if (!formData.subject || !formData.email || !formData.message) {
+        if (!subject || !email || !message) {
             toast.error('Please fill in all fields');
             return;
         }
 
         try {
-            const result = await createTicket.mutateAsync(formData);
+            const result = await createTicket.mutateAsync({ subject, email, message });
             toast.success(`Your message has been sent successfully! Ticket ID: ${result.ticketId}`);
-            setFormData({ subject: '', email: profile?.email || '', message: '' });
-        } catch (error) {
-            console.error('Failed to send support message:', error);
-            toast.error('Failed to send message. Please try again.');
+            setSubject('');
+            setMessage('');
+            setEmailOverride(null);
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Failed to send message. Please try again.'));
         }
     };
 
@@ -90,15 +93,15 @@ const HelpSupportPage = () => {
                         <div className="space-y-6">
                             <TextInput
                                 label="Subject"
-                                value={formData.subject}
-                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                value={subject}
+                                onChange={(e) => setSubject(e.target.value)}
                                 placeholder="What do you need help with?"
                             />
 
                             <TextInput
                                 label="Email Address"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                value={email}
+                                onChange={(e) => setEmailOverride(e.target.value)}
                                 placeholder="your.email@example.com"
                                 type="email"
                             />
@@ -108,8 +111,8 @@ const HelpSupportPage = () => {
                                     Message
                                 </label>
                                 <textarea
-                                    value={formData.message}
-                                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
                                     rows={6}
                                     className="w-full px-4 py-3 border border-[#ececec] rounded-lg text-sm text-[#17181a] placeholder:text-[#999999] focus:outline-none focus:border-[#C9A227] resize-none"
                                     placeholder="Describe your issue or question in detail..."

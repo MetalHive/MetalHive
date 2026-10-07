@@ -4,14 +4,20 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
+import { useAuthStore } from "@/app/stores/AuthStore";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const user = useAuthStore((s) => s.user);
+
+  // Logged-in buyers go straight to the marketplace; everyone else signs up first.
+  const marketplaceHref =
+    user?.role === "BUYER" ? "/buyersDashboard/Marketplace" : user?.role === "SELLER" ? "/sellerDashBoard" : "/auth";
 
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "About Us", href: "#about" },
-    { name: "Marketplace", href: "#impact" },
+    { name: "Marketplace", href: marketplaceHref },
     { name: "How It Works", href: "#how" },
     { name: "Contact", href: "#contact" },
   ];
@@ -58,13 +64,13 @@ const Navbar = () => {
           {/* Desktop Nav */}
           <div className="hidden md:flex space-x-8">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
                 href={link.href}
                 className="text-white hover:text-[#C9A227] transition-colors"
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
           </div>
 

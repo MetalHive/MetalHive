@@ -1,3 +1,4 @@
+import axios from 'axios';
 import apiClient from '../client';
 
 // Types
@@ -86,10 +87,13 @@ const settingsService = {
         try {
             const response = await apiClient.get<PayoutDetails>('/auth/seller/payout-details/');
             return response.data;
-        } catch (error: any) {
+        } catch (error: unknown) {
             // Return null if no payout details configured
-            if (error.response?.status === 404 || error.response?.data?.data === null) {
-                return null;
+            if (axios.isAxiosError(error)) {
+                const body = error.response?.data as { data?: unknown } | undefined;
+                if (error.response?.status === 404 || body?.data === null) {
+                    return null;
+                }
             }
             throw error;
         }

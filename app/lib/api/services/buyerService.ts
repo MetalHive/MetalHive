@@ -2,6 +2,8 @@ import apiClient from '../client';
 
 // ============ INTERFACES ============
 
+export type VerificationStatus = 'pending' | 'verified' | 'rejected';
+
 export interface BuyerProfile {
     id: number;
     fullName: string;
@@ -10,8 +12,19 @@ export interface BuyerProfile {
     companyName: string;
     companyLogo: string;
     isVerified: boolean;
+    verificationStatus?: VerificationStatus;
+    /** Absolute URL of the uploaded verification document, if any. */
+    verificationDocument?: string | null;
     rating: number;
     reviewsCount: number;
+}
+
+export interface Pagination {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+    totalPages?: number;
 }
 
 export interface BuyerDashboardStats {
@@ -46,23 +59,29 @@ export interface MarketplaceListing {
 
 export interface MarketplaceListingsResponse {
     listings: MarketplaceListing[];
-    pagination: {
-        total: number;
-        page: number;
-        limit: number;
-        pages: number;
-    };
+    pagination: Pagination;
+}
+
+export interface ExistingBid {
+    id: string;
+    status: string;
+    offerPrice: number;
+    offerPriceUnit?: string;
+    quantity?: string;
+    message?: string;
+    createdAt?: string;
 }
 
 export interface ListingDetail extends MarketplaceListing {
     seller: {
         id: string;
         name: string;
-        rating: number;
+        rating: number | null;
         verified: boolean;
     };
     weight?: string;
-    existingBid?: BuyerBid | null;
+    /** The current buyer's open bid on this listing, or null. */
+    existingBid?: ExistingBid | null;
 }
 
 export interface SavedListing {
@@ -90,7 +109,7 @@ export interface BuyerBid {
     offerPriceUnit?: string;
     totalAmount?: string | null;
     quantity: string;
-    status: 'pending' | 'countered' | 'accepted' | 'rejected' | 'withdrawn';
+    status: 'pending' | 'countered' | 'accepted' | 'rejected' | 'withdrawn' | 'expired';
     message: string;
     createdAt: string;
 }
@@ -128,22 +147,20 @@ export interface BuyerBidDetail {
     createdAt: string;
 }
 
+export interface BuyerBidCounts {
+    all: number;
+    pending: number;
+    countered: number;
+    accepted: number;
+    rejected: number;
+    withdrawn: number;
+    expired?: number;
+}
+
 export interface BuyerBidsResponse {
     bids: BuyerBid[];
-    counts: {
-        all: number;
-        pending: number;
-        countered: number;
-        accepted: number;
-        rejected: number;
-        withdrawn: number;
-    };
-    pagination: {
-        total: number;
-        page: number;
-        limit: number;
-        pages: number;
-    };
+    counts: BuyerBidCounts;
+    pagination: Pagination;
 }
 
 export interface Purchase {
@@ -151,30 +168,27 @@ export interface Purchase {
     date: string;
     listing: {
         name: string;
-        image: string;
-    };
+        image: string | null;
+    } | null;
     seller: {
         id: string;
         name: string;
-    };
+    } | null;
     amount: number;
-    status: 'complete' | 'processing';
+    status: 'complete' | 'completed' | 'processing' | 'pending' | string;
+}
+
+export interface PurchaseSummary {
+    totalSpent: number;
+    totalPurchases: number;
+    completedPurchases: number;
+    pendingPurchases: number;
 }
 
 export interface PurchaseHistoryResponse {
     purchases: Purchase[];
-    summary: {
-        totalSpent: number;
-        completed: number;
-        pending: number;
-        allTime: number;
-    };
-    pagination: {
-        total: number;
-        page: number;
-        limit: number;
-        pages: number;
-    };
+    summary: PurchaseSummary;
+    pagination: Pagination;
 }
 
 export interface PlaceBidData {
@@ -182,6 +196,12 @@ export interface PlaceBidData {
     bidPrice: number;
     priceUnit: string;
     quantity: string;
+    message?: string;
+}
+
+export interface EditBidData {
+    offerAmount: number;
+    quantity?: string;
     message?: string;
 }
 
@@ -199,6 +219,8 @@ const buyerService = {
             companyName: '',
             companyLogo: '',
             isVerified: false,
+            verificationStatus: 'pending',
+            verificationDocument: null,
             rating: 0,
             reviewsCount: 0,
         };
@@ -274,8 +296,9 @@ const buyerService = {
 
     // ========== BIDS ==========
     async getBids(params?: {
-        status?: 'all' | 'pending' | 'countered' | 'accepted' | 'rejected' | 'withdrawn';
+        status?: 'all' | 'pending' | 'countered' | 'accepted' | 'rejected' | 'withdrawn' | 'expired';
         page?: number;
+        limit?: number;
     }): Promise<BuyerBidsResponse> {
         const response = await apiClient.get('/buyer/bids/', { params });
         const data = response.data?.data || response.data;
@@ -296,13 +319,13 @@ const buyerService = {
         return response.data?.data || response.data;
     },
 
-    async editBid(id: string, data: Partial<PlaceBidData>): Promise<BuyerBidDetail> {
+    async editBid(id: string, data: EditBidData): Promise<BuyerBidDetail> {
         const response = await apiClient.patch(`/buyer/bids/${id}/edit/`, data);
         return response.data?.data || response.data;
     },
 
-    async withdrawBid(id: string): Promise<{ message: string }> {
-        const response = await apiClient.delete(`/buyer/bids/${id}/withdraw/`);
+    async withdrawBid(id: string, reason?: string): Promise<{ message: string }> {
+        const response = await apiClient.patch(`/buyer/bids/${id}/withdraw/`, reason ? { reason } : {});
         return response.data;
     },
 
@@ -327,12 +350,13 @@ const buyerService = {
         endDate?: string;
         search?: string;
         page?: number;
+        limit?: number;
     }): Promise<PurchaseHistoryResponse> {
         const response = await apiClient.get('/buyer/history/purchases/', { params });
         const data = response.data?.data || response.data;
         return {
             purchases: data?.purchases || [],
-            summary: data?.summary || { totalSpent: 0, completed: 0, pending: 0, allTime: 0 },
+            summary: data?.summary || { totalSpent: 0, totalPurchases: 0, completedPurchases: 0, pendingPurchases: 0 },
             pagination: data?.pagination || { total: 0, page: 1, limit: 20, pages: 0 },
         };
     },

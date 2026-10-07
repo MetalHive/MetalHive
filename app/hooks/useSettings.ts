@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import settingsService, { UserProfile, PayoutDetails, SupportTicket } from '../lib/api/services/settingsService';
+import settingsService, { UserProfile } from '../lib/api/services/settingsService';
 
 // Profile Hooks
 export const useUserProfile = () => {
