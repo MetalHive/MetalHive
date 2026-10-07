@@ -46,9 +46,8 @@ const SignIn = () => {
                 // Default fallback
                 router.push('/sellerDashBoard')
             }
-        } catch (err) {
-            console.error('Login failed:', err)
-            // Error will be shown via authError
+        } catch {
+            // The backend message is shown via authError below.
         }
     }
 
@@ -130,7 +129,7 @@ const SignIn = () => {
 
                         {/* Sign Up Link */}
                         <p className="text-sm text-center text-[#666666]">
-                            Don't have an account?{' '}
+                            Don&apos;t have an account?{' '}
                             <Link href="/auth" className="text-[#C9A227] font-semibold hover:underline">
                                 Sign up
                             </Link>

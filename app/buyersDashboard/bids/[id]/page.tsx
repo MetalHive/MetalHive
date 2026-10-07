@@ -1,8 +1,10 @@
 'use client'
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ChevronLeft, MapPin, Package, Scale } from 'lucide-react';
+import { ChevronLeft, MapPin, Package, Scale, X } from 'lucide-react';
 import { useBuyerBidDetail, useWithdrawBid, useAcceptCounterOffer, useRejectCounterOffer } from '../../../hooks/useBuyer';
+import { Modal } from '@/app/Components/Modals';
+import { getErrorMessage } from '@/app/lib/api/client';
 
 import { useToast } from '@/app/Components/Toast';
 const formatDate = (value?: string | null) => {
@@ -11,6 +13,75 @@ const formatDate = (value?: string | null) => {
   return Number.isNaN(date.getTime())
     ? '—'
     : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const formatDateTime = (value?: string | null) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? '—'
+    : date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
+const STATUS_TEXT: Record<string, string> = {
+  pending: 'Awaiting seller response',
+  countered: 'Seller has made a counter offer',
+  accepted: 'Your bid has been accepted!',
+  rejected: 'Your bid was declined',
+  withdrawn: 'You withdrew this bid',
+  expired: 'This bid has expired',
+};
+
+// Withdraw confirmation (replaces the native confirm()).
+const WithdrawBidModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (reason?: string) => void;
+  isLoading?: boolean;
+}> = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
+  const [reason, setReason] = useState('');
+  return (
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <div className="p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-[#17181a]">Withdraw Offer</h2>
+          <button onClick={onClose} className="text-[#737780] hover:text-[#17181a]">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-sm text-[#737780] mb-6">
+          Are you sure you want to withdraw this bid? The seller will no longer see your offer.
+        </p>
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-[#737780] mb-2">
+            Reason (optional)
+          </label>
+          <input
+            type="text"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full px-4 py-3 border border-[#ececec] rounded-lg text-sm text-[#17181a] placeholder:text-[#999999] focus:outline-none focus:border-[#C9A227]"
+            placeholder="e.g. Found another supplier"
+          />
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-6 py-3 border border-[#ececec] text-[#17181a] font-medium text-sm rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Keep Bid
+          </button>
+          <button
+            onClick={() => onConfirm(reason.trim() || undefined)}
+            disabled={isLoading}
+            className="flex-1 px-6 py-3 bg-[#C9A227] text-white font-medium text-sm rounded-lg hover:bg-[#b08f1f] transition-colors disabled:opacity-50"
+          >
+            {isLoading ? 'Withdrawing...' : 'Withdraw'}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
 };
 
 const BidsDetail = () => {
@@ -25,17 +96,17 @@ const BidsDetail = () => {
   const rejectCounter = useRejectCounterOffer();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showWithdraw, setShowWithdraw] = useState(false);
 
-  const handleWithdraw = () => {
-    if (confirm('Are you sure you want to withdraw this bid?')) {
-      withdrawBid.mutate(bidId, {
-        onSuccess: () => {
-          toast.success('Bid withdrawn successfully');
-          router.push('/buyersDashboard/bids');
-        },
-        onError: () => toast.error('Failed to withdraw bid'),
-      });
-    }
+  const handleWithdraw = (reason?: string) => {
+    withdrawBid.mutate({ id: bidId, reason }, {
+      onSuccess: () => {
+        setShowWithdraw(false);
+        toast.success('Bid withdrawn successfully');
+        router.push('/buyersDashboard/bids');
+      },
+      onError: (err) => toast.error(getErrorMessage(err, 'Failed to withdraw bid')),
+    });
   };
 
   const handleAcceptCounter = () => {
@@ -45,7 +116,7 @@ const BidsDetail = () => {
           toast.success('Counter offer accepted!');
           router.push('/buyersDashboard/bids');
         },
-        onError: () => toast.error('Failed to accept counter offer'),
+        onError: (err) => toast.error(getErrorMessage(err, 'Failed to accept counter offer')),
       });
     }
   };
@@ -55,9 +126,8 @@ const BidsDetail = () => {
       rejectCounter.mutate(bidId, {
         onSuccess: () => {
           toast.success('Counter offer rejected');
-          router.refresh();
         },
-        onError: () => toast.error('Failed to reject counter offer'),
+        onError: (err) => toast.error(getErrorMessage(err, 'Failed to reject counter offer')),
       });
     }
   };
@@ -84,7 +154,7 @@ const BidsDetail = () => {
     );
   }
 
-  const images = bid.listing.images?.length > 0 ? bid.listing.images : ['/bid1.png'];
+  const images = bid.listing.images?.filter(Boolean).length > 0 ? bid.listing.images.filter(Boolean) : ['/bid1.png'];
   const isCountered = bid.status === 'countered' && bid.latestCounterOffer;
   const isPending = bid.status === 'pending';
 
@@ -107,8 +177,9 @@ const BidsDetail = () => {
 
             {/* Image Carousel */}
             <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={images[currentImageIndex]}
+                src={images[currentImageIndex] || '/bid1.png'}
                 alt={bid.listing.title}
                 className="w-full h-80 object-cover"
               />
@@ -185,8 +256,11 @@ const BidsDetail = () => {
               <div className="mb-4">
                 <p className="text-sm text-gray-600 mb-1">Your Offer Amount</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ${bid.offerPrice?.toFixed(2)} / {bid.offerPriceUnit}
+                  ${Number(bid.offerPrice || 0).toFixed(2)} / {bid.offerPriceUnit}
                 </p>
+                {bid.quantity && (
+                  <p className="text-sm text-gray-500 mt-1">Quantity: {bid.quantity}</p>
+                )}
               </div>
 
               {/* Counter Offer (if exists) */}
@@ -194,7 +268,7 @@ const BidsDetail = () => {
                 <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-sm text-blue-800 font-medium mb-1">Counter Offer from Seller</p>
                   <p className="text-xl font-bold text-blue-900">
-                    ${bid.latestCounterOffer.price?.toFixed(2)} / {bid.latestCounterOffer.priceUnit}
+                    ${Number(bid.latestCounterOffer.price || 0).toFixed(2)} / {bid.latestCounterOffer.priceUnit}
                   </p>
                 </div>
               )}
@@ -202,16 +276,13 @@ const BidsDetail = () => {
               {/* Date Submitted */}
               <div className="mb-4">
                 <p className="text-sm text-gray-600 mb-1">Date Submitted</p>
-                <p className="text-sm font-medium text-gray-900">{bid.createdAt}</p>
+                <p className="text-sm font-medium text-gray-900">{formatDateTime(bid.createdAt)}</p>
               </div>
 
               {/* Status */}
               <div className="mb-6">
                 <p className="text-sm text-gray-600">
-                  {bid.status === 'pending' && 'Awaiting seller response'}
-                  {bid.status === 'countered' && 'Seller has made a counter offer'}
-                  {bid.status === 'accepted' && 'Your bid has been accepted!'}
-                  {bid.status === 'rejected' && 'Your bid was declined'}
+                  {STATUS_TEXT[bid.status] || bid.status}
                 </p>
               </div>
 
@@ -247,7 +318,7 @@ const BidsDetail = () => {
                 {isPending && (
                   <>
                     <button
-                      onClick={handleWithdraw}
+                      onClick={() => setShowWithdraw(true)}
                       disabled={withdrawBid.isPending}
                       className="w-full bg-[#C9A227] hover:bg-yellow-600 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50"
                     >
@@ -266,6 +337,13 @@ const BidsDetail = () => {
           </div>
         </div>
       </div>
+
+      <WithdrawBidModal
+        isOpen={showWithdraw}
+        onClose={() => setShowWithdraw(false)}
+        onConfirm={handleWithdraw}
+        isLoading={withdrawBid.isPending}
+      />
     </div>
   );
 };

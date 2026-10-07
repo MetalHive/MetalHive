@@ -111,9 +111,9 @@ const Reason2: React.FC = () => {
                 </div>
                 <p className="text-xs text-gray-500 mb-2">{card.description}</p>
                 <p className="text-xs font-medium mb-3">{card.company}</p>
-                <button className="text-[#C9A227] text-sm font-semibold flex items-center gap-1">
+                <Link href="/auth" className="text-[#C9A227] text-sm font-semibold flex items-center gap-1">
                   Send Bid &gt;
-                </button>
+                </Link>
               </div>
             </div>
           ))}

@@ -10,6 +10,7 @@ import buyerService, {
     BuyerBidDetail,
     PurchaseHistoryResponse,
     PlaceBidData,
+    EditBidData,
 } from '../lib/api/services/buyerService';
 
 // ========== PROFILE HOOKS ==========
@@ -115,8 +116,9 @@ export function useUnsaveListing() {
 // ========== BIDS HOOKS ==========
 
 export function useBuyerBids(params?: {
-    status?: 'all' | 'pending' | 'countered' | 'accepted' | 'rejected' | 'withdrawn';
+    status?: 'all' | 'pending' | 'countered' | 'accepted' | 'rejected' | 'withdrawn' | 'expired';
     page?: number;
+    limit?: number;
 }) {
     return useQuery<BuyerBidsResponse>({
         queryKey: ['buyerBids', params],
@@ -147,11 +149,12 @@ export function usePlaceBid() {
 export function useEditBid() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: Partial<PlaceBidData> }) =>
+        mutationFn: ({ id, data }: { id: string; data: EditBidData }) =>
             buyerService.editBid(id, data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['buyerBids'] });
             queryClient.invalidateQueries({ queryKey: ['buyerBid', variables.id] });
+            queryClient.invalidateQueries({ queryKey: ['marketplaceListing'] });
         },
     });
 }
@@ -159,10 +162,12 @@ export function useEditBid() {
 export function useWithdrawBid() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (id: string) => buyerService.withdrawBid(id),
-        onSuccess: () => {
+        mutationFn: ({ id, reason }: { id: string; reason?: string }) => buyerService.withdrawBid(id, reason),
+        onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['buyerBids'] });
+            queryClient.invalidateQueries({ queryKey: ['buyerBid', variables.id] });
             queryClient.invalidateQueries({ queryKey: ['buyerDashboardStats'] });
+            queryClient.invalidateQueries({ queryKey: ['marketplaceListing'] });
         },
     });
 }
@@ -209,6 +214,7 @@ export function usePurchaseHistory(params?: {
     endDate?: string;
     search?: string;
     page?: number;
+    limit?: number;
 }) {
     return useQuery<PurchaseHistoryResponse>({
         queryKey: ['purchaseHistory', params],

@@ -3,6 +3,7 @@
 import ProductCard from "./marketPlaceCard";
 import Link from "next/link";
 import { useMarketplaceListings } from "../../hooks/useBuyer";
+import { formatDate } from "@/app/lib/utils/formatters";
 
 const MarketPlace = () => {
     const { data, isLoading, error } = useMarketplaceListings({ limit: 9 });
@@ -55,7 +56,7 @@ const MarketPlace = () => {
                                 title={listing.materialName}
                                 price={`$${listing.basePrice} / ${listing.priceUnit}`}
                                 location={listing.location}
-                                timeAgo={new Date(listing.createdAt).toLocaleDateString()}
+                                timeAgo={formatDate(listing.createdAt)}
                                 description={listing.description}
                                 images={listing.images}
                             />

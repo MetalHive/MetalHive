@@ -1,9 +1,19 @@
 import React from 'react';
 import Link from 'next/link';
-import { Package, Eye, User, ArrowRight } from 'lucide-react';
+import { Package, Eye, User, ArrowRight, LucideIcon } from 'lucide-react';
+
+interface Feature {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  action: string;
+  href: string;
+  bgColor: string;
+  iconColor: string;
+}
 
 export default function FeatureCards() {
-  const features = [
+  const features: Feature[] = [
     {
       icon: Package,
       title: "Create Listing",
@@ -60,7 +70,7 @@ export default function FeatureCards() {
   );
 }
 
-function FeatureCard({ feature }: any) {
+function FeatureCard({ feature }: { feature: Feature }) {
   const Icon = feature.icon;
   
   return (

@@ -1,4 +1,4 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://metal.ajoo.me';
 
@@ -22,16 +22,16 @@ apiClient.interceptors.request.use(
 
     return config;
   },
-  (error:any) => {
+  (error: unknown) => {
     return Promise.reject(error);
   }
 );
 
 // Response interceptor for token refresh and unwrapping data
 apiClient.interceptors.response.use(
-  (response: any) => {
+  (response: AxiosResponse) => {
     // Unwrap the data from backend response structure
-    // Backend returns: { success: true, data: {...}, errors: null }
+    // Backend returns: { success: true, message, data: {...}, errors: null }
     // We want to return just the data part
     if (response.data && response.data.data !== undefined) {
       response.data = response.data.data;
@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // If 401 and we haven't retried yet, try to refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
@@ -74,7 +74,7 @@ apiClient.interceptors.response.use(
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
           localStorage.removeItem('user');
-          window.location.href = '/auth';
+          window.location.href = '/signin';
         }
         return Promise.reject(refreshError);
       }
@@ -85,58 +85,98 @@ apiClient.interceptors.response.use(
 );
 
 // Helper to handle API errors
+export interface ApiErrorDetail {
+  field: string;
+  message: string;
+}
+
 export interface ApiError {
   code: string;
   message: string;
-  details?: Array<{ field: string; message: string }>;
+  details?: ApiErrorDetail[];
 }
+
+/**
+ * Shape of the backend error envelope:
+ * { success: false, message, data: null, errors: { code, details: [{field, message}] } }
+ */
+interface ErrorEnvelope {
+  success?: boolean;
+  message?: string;
+  errors?: {
+    code?: string;
+    details?: ApiErrorDetail[];
+  } | null;
+}
+
+const STATUS_FALLBACKS: Record<number, ApiError> = {
+  401: { code: 'UNAUTHORIZED', message: 'Authentication required. Please log in.' },
+  403: { code: 'FORBIDDEN', message: 'You do not have permission to perform this action.' },
+  404: { code: 'NOT_FOUND', message: 'The requested resource was not found.' },
+  500: { code: 'SERVER_ERROR', message: 'A server error occurred. Please try again later.' },
+};
 
 export const handleApiError = (error: unknown): ApiError => {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<{ success?: boolean; errors?: any; message?: string; error?: ApiError; data?: any }>;
+    const axiosError = error as AxiosError<ErrorEnvelope>;
+    const body = axiosError.response?.data;
+    const status = axiosError.response?.status;
 
-    if (axiosError.response?.data?.error) {
-      return axiosError.response.data.error;
+    const details = Array.isArray(body?.errors?.details) ? body?.errors?.details : undefined;
+    const code = body?.errors?.code || (status && STATUS_FALLBACKS[status]?.code) || 'UNKNOWN_ERROR';
+
+    // Prefer the backend's own message; fall back to the first field error,
+    // then to a status-based generic message.
+    let message = typeof body?.message === 'string' && body.message.trim() ? body.message : '';
+    if (!message && details && details.length > 0) {
+      message = details.map((d) => (d.field ? `${d.field}: ${d.message}` : d.message)).join(' ');
+    }
+    if (!message && status && STATUS_FALLBACKS[status]) {
+      message = STATUS_FALLBACKS[status].message;
+    }
+    if (!message) {
+      message = axiosError.message || 'An unexpected error occurred.';
     }
 
-    if (axiosError.response?.status === 401) {
-      return {
-        code: 'UNAUTHORIZED',
-        message: 'Authentication required. Please log in.',
-      };
-    }
+    return { code, message, details };
+  }
 
-    if (axiosError.response?.status === 403) {
-      return {
-        code: 'FORBIDDEN',
-        message: 'You do not have permission to perform this action.',
-      };
-    }
-
-    if (axiosError.response?.status === 404) {
-      return {
-        code: 'NOT_FOUND',
-        message: 'The requested resource was not found.',
-      };
-    }
-
-    if (axiosError.response?.status === 500) {
-      return {
-        code: 'SERVER_ERROR',
-        message: 'A server error occurred. Please try again later.',
-      };
-    }
-
-    return {
-      code: 'UNKNOWN_ERROR',
-      message: axiosError.message || 'An unexpected error occurred.',
-    };
+  if (error instanceof Error && error.message) {
+    return { code: 'UNKNOWN_ERROR', message: error.message };
   }
 
   return {
     code: 'UNKNOWN_ERROR',
     message: 'An unexpected error occurred.',
   };
+};
+
+/** Convenience: just the human-readable message, with an optional fallback. */
+export const getErrorMessage = (error: unknown, fallback?: string): string => {
+  const parsed = handleApiError(error);
+  if (parsed.code === 'UNKNOWN_ERROR' && fallback) {
+    return parsed.message === 'An unexpected error occurred.' ? fallback : parsed.message;
+  }
+  return parsed.message || fallback || 'An unexpected error occurred.';
+};
+
+/** The backend's error code (e.g. BUYER_NOT_VERIFIED), if any. */
+export const getErrorCode = (error: unknown): string | undefined => {
+  if (axios.isAxiosError(error)) {
+    const body = (error as AxiosError<ErrorEnvelope>).response?.data;
+    return body?.errors?.code ?? undefined;
+  }
+  return undefined;
+};
+
+/** Field-level errors keyed by field name, for inline form display. */
+export const getFieldErrors = (error: unknown): Record<string, string> => {
+  const { details } = handleApiError(error);
+  if (!details) return {};
+  return details.reduce<Record<string, string>>((acc, d) => {
+    if (d.field) acc[d.field] = d.message;
+    return acc;
+  }, {});
 };
 
 export default apiClient;

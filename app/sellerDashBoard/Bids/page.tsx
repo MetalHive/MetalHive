@@ -5,50 +5,47 @@ import { Search } from "lucide-react"
 import Link from 'next/link'
 import { sellerSidebarLinks } from '../../lib/sidebarConfig'
 import { useBids } from '../../hooks/useApi'
+import { useDebouncedValue } from '../../hooks/useDebounce'
+import Pagination from '@/app/Components/Pagination'
 
-interface Bid {
-  id: string
-  image: string
-  name: string
-  quantity: number
-  bids: number
-  price: number
-  status: "pending" | "accepted" | "rejected" | "countered" | "expired"
+type BidStatusFilter = "pending" | "countered" | "accepted" | "rejected"
+
+const STATUS_COLOR: Record<string, string> = {
+  pending: 'text-yellow-600',
+  countered: 'text-blue-600',
+  accepted: 'text-green-600',
+  rejected: 'text-red-600',
+  expired: 'text-gray-500',
 }
 
-const Page = () => {
+const SellerBidsPage = () => {
   const [searchQuery, setSearchQuery] = useState("")
-  // Note: API can return "expired" bids, but doesn't support filtering by "expired"
-  const [statusFilter, setStatusFilter] = useState<"pending" | "accepted" | "rejected" | "countered" | "all">("pending")
+  const [statusFilter, setStatusFilter] = useState<BidStatusFilter>("pending")
+  const [page, setPage] = useState(1)
 
-  // Fetch bids from API
+  const debouncedSearch = useDebouncedValue(searchQuery, 300)
+
+  // The API filters by status and search, and returns `counts` for the badges.
   const { data: bidsData, isLoading, error } = useBids({
     status: statusFilter,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
+    page,
   })
 
-  // Map API data to component format
-  const bids: Bid[] = (bidsData?.bids || []).map((bid) => ({
-    id: bid.id,
-    image: bid.listing.image || '/bid1.png',
-    name: bid.listing.name,
-    quantity: parseInt(bid.quantity) || 0,
-    bids: 1, // Each bid item represents one bid
-    price: bid.offerPrice || 0,
-    status: bid.status,
-  }))
+  const bids = bidsData?.bids || []
+  const counts = bidsData?.counts
 
-  // Filtered bids
-  const filteredBids = bids.filter(
-    (item) =>
-      item.status === statusFilter &&
-      item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const tabs: { label: string; value: BidStatusFilter; count: number }[] = [
+    { label: "Pending", value: "pending", count: counts?.pending ?? 0 },
+    { label: "Countered", value: "countered", count: counts?.countered ?? 0 },
+    { label: "Accepted", value: "accepted", count: counts?.accepted ?? 0 },
+    { label: "Rejected", value: "rejected", count: counts?.rejected ?? 0 },
+  ]
 
-  // Counts - calculate from filtered bids since API doesn't provide counts
-  const pendingCount = bids.filter(b => b.status === 'pending').length
-  const acceptedCount = bids.filter(b => b.status === 'accepted').length
-  const rejectedCount = bids.filter(b => b.status === 'rejected').length
+  const selectStatus = (value: BidStatusFilter) => {
+    setStatusFilter(value)
+    setPage(1)
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -69,7 +66,7 @@ const Page = () => {
               type="text"
               placeholder="Search"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setPage(1) }}
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full"
             />
             <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
@@ -78,14 +75,10 @@ const Page = () => {
 
         {/* Status Tags */}
         <div className="flex flex-wrap gap-3 mb-6">
-          {[
-            { label: "Pending", value: "pending" as const, count: pendingCount },
-            { label: "Accepted", value: "accepted" as const, count: acceptedCount },
-            { label: "Rejected", value: "rejected" as const, count: rejectedCount },
-          ].map((item) => (
+          {tabs.map((item) => (
             <button
               key={item.value}
-              onClick={() => setStatusFilter(item.value)}
+              onClick={() => selectStatus(item.value)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${statusFilter === item.value
                 ? "bg-[#C9A227] text-white"
                 : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
@@ -112,38 +105,44 @@ const Page = () => {
         )}
 
         {/* Bids Grid */}
-        {!isLoading && !error && (
+        {!isLoading && !error && bids.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredBids.map((item) => (
+            {bids.map((bid) => (
               <Link
-                key={item.id}
-                href={`/sellerDashBoard/Bids/${item.id}`}
+                key={bid.id}
+                href={`/sellerDashBoard/Bids/${bid.id}`}
                 className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
               >
                 {/* Image */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={item.image}
-                  alt={item.name}
+                  src={bid.listing.image || '/bid1.png'}
+                  alt={bid.listing.name}
                   className="w-full h-40 object-cover"
                 />
 
                 {/* Content */}
                 <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
-                  <p className="text-sm text-gray-500 mb-3">Quantity: {item.quantity}kg</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">{bid.listing.name}</h3>
+                  <p className="text-sm text-gray-500 mb-1">From {bid.buyer?.companyName || bid.buyer?.name || 'Buyer'}</p>
+                  {/* bid.quantity already includes its unit (e.g. "30kg"). */}
+                  <p className="text-sm text-gray-500 mb-3">Quantity: {bid.quantity}</p>
 
                   {/* Stats */}
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-xs text-gray-500">Offer</p>
-                      <p className="text-lg font-bold text-[#C9A227]">${item.price}</p>
+                      <p className="text-lg font-bold text-[#C9A227]">
+                        ${Number(bid.offerPrice || 0).toFixed(2)}
+                        {bid.offerPriceUnit && (
+                          <span className="text-xs font-normal text-gray-500"> / {bid.offerPriceUnit}</span>
+                        )}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-500">Status</p>
-                      <p className={`text-sm font-medium ${item.status === 'pending' ? 'text-yellow-600' :
-                        item.status === 'accepted' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                      <p className={`text-sm font-medium ${STATUS_COLOR[bid.status] || 'text-gray-600'}`}>
+                        {bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
                       </p>
                     </div>
                   </div>
@@ -154,14 +153,18 @@ const Page = () => {
         )}
 
         {/* Empty State */}
-        {!isLoading && !error && filteredBids.length === 0 && (
+        {!isLoading && !error && bids.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">No {statusFilter} bids found</p>
           </div>
+        )}
+
+        {!isLoading && !error && (
+          <Pagination page={page} pagination={bidsData?.pagination} onPageChange={setPage} />
         )}
       </div>
     </div>
   )
 }
 
-export default Page
+export default SellerBidsPage

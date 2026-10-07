@@ -1,13 +1,18 @@
+import type { ComponentType } from 'react'
 import { Home, Grid, Wallet } from 'lucide-react'
 import { BsShop } from "react-icons/bs";
 import { MdAnalytics } from "react-icons/md";
 import { IoSettingsOutline } from "react-icons/io5";
 import { IoPricetagOutline } from "react-icons/io5";
+
+export type SidebarIcon = ComponentType<{ size?: number; className?: string }>
+
 export interface SidebarLink {
   label: string
   href: string
-  icon: any
-  badge?: string
+  icon: SidebarIcon
+  /** 'walletBalance' renders the seller's live available balance. */
+  badge?: 'walletBalance'
 }
 
 export const sellerSidebarLinks: SidebarLink[] = [
@@ -27,7 +32,7 @@ export const sellerSidebarLinks: SidebarLink[] = [
     label: 'Wallet',
     href: '/sellerDashBoard/wallet',
     icon: Wallet,
-    badge: '$1,240',
+    badge: 'walletBalance',
   }, {
     label: 'History',
     href: '/sellerDashBoard/history',

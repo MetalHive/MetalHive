@@ -1,7 +1,25 @@
 import { FaChevronDown } from "react-icons/fa6";
 import { FaChevronUp } from "react-icons/fa6";
 import Link from 'next/link'
-const AccordionSection = ({ title, isOpen, onToggle, listings }: any) => {
+
+export interface AccordionListing {
+    id: string;
+    image: string;
+    name: string;
+    quantity: number | string;
+    bids: number;
+    price: number;
+    status: string;
+}
+
+interface AccordionSectionProps {
+    title: string;
+    isOpen: boolean;
+    onToggle: () => void;
+    listings: AccordionListing[];
+}
+
+const AccordionSection = ({ title, isOpen, onToggle, listings }: AccordionSectionProps) => {
     return (
         <div>
             {/* Header */}
@@ -29,7 +47,7 @@ const AccordionSection = ({ title, isOpen, onToggle, listings }: any) => {
 
                     {/* Items */}
                     <div className="divide-y h-[350px] overflow-y-auto">
-                        {listings.map((listing: any) => (
+                        {listings.map((listing) => (
                             <div key={listing.id} className="grid grid-cols-12 gap-4 px-4 py-4 hover:bg-gray-50 border-b border-b-[#737780]">
 
                                 <div className="col-span-1 flex items-center">
@@ -37,7 +55,8 @@ const AccordionSection = ({ title, isOpen, onToggle, listings }: any) => {
                                 </div>
 
                                 <div className="col-span-4 flex items-center space-x-3">
-                                    <img src={listing.image} className="w-16 h-16 rounded object-cover" />
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={listing.image || '/bid1.png'} alt={listing.name} className="w-16 h-16 rounded object-cover" />
                                     <div>
                                         <h3 className="font-medium">{listing.name}</h3>
                                         <p className="text-sm text-gray-500">
@@ -51,8 +70,7 @@ const AccordionSection = ({ title, isOpen, onToggle, listings }: any) => {
                                 </div>
 
                                 <div className="col-span-2 flex items-center">
-                                          ${listing.price}
-                                    {/* ${listing.price.toFixed(2)} */}
+                                    ${Number(listing.price || 0).toFixed(2)}
                                 </div>
 
                                 <div className="col-span-2 flex items-center">

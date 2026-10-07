@@ -1,11 +1,12 @@
 "use client"
 
 import React from "react";
+import Link from "next/link";
 import SideBar from "@/app/Components/SideBar";
 import ListingsDashboard from "./ListingsDashboard";
 import { sellerSidebarLinks } from "@/app/lib/sidebarConfig";
 
-const page = () => {
+const ListingsPage = () => {
   return (
 
     <div className="flex min-h-screen bg-gray-50">
@@ -24,10 +25,13 @@ const page = () => {
                 </p>
               </div>
 
-              <button className="bg-[#C9A227] hover:bg-yellow-700 text-white px-4 py-2 rounded-md font-medium flex items-center gap-2 transition-colors w-full md:w-auto justify-center md:justify-start">
+              <Link
+                href="/sellerDashBoard/create-listing"
+                className="bg-[#C9A227] hover:bg-yellow-700 text-white px-4 py-2 rounded-md font-medium flex items-center gap-2 transition-colors w-full md:w-auto justify-center md:justify-start"
+              >
                 <span className="text-lg">+</span>
                 Create New Listing
-              </button>
+              </Link>
             </div>
 
           </div>
@@ -38,4 +42,4 @@ const page = () => {
   )
 }
 
-export default page
+export default ListingsPage

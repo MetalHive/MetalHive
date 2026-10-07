@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getStoredUser, isAuthenticated } from '@/app/lib/api/auth'
+import { useAuthStore } from '@/app/stores/AuthStore'
 
 export default function SellerDashboardLayout({
     children,
@@ -10,43 +10,31 @@ export default function SellerDashboardLayout({
     children: React.ReactNode
 }) {
     const router = useRouter()
-    const [isAuthorized, setIsAuthorized] = useState(false)
-    const [isChecking, setIsChecking] = useState(true)
+    const user = useAuthStore((s) => s.user)
+    const isInitialized = useAuthStore((s) => s.isInitialized)
 
+    // AuthInitializer hydrates the store from localStorage (and validates the
+    // session with /auth/me/). Until that has happened we show a spinner; once
+    // it has, anyone who is not a seller is sent to the right place.
     useEffect(() => {
-        // Check authentication and authorization
-        if (!isAuthenticated()) {
-            router.push('/signin')
+        if (!isInitialized) return
+        if (!user) {
+            router.replace('/signin')
             return
         }
-
-        const user = getStoredUser()
-        if (user?.role !== 'SELLER') {
-            // If user is a buyer, redirect to buyer dashboard
-            if (user?.role === 'BUYER') {
-                router.push('/buyersDashboard')
-            } else {
-                router.push('/signin')
-            }
-            return
+        if (user.role !== 'SELLER') {
+            router.replace(user.role === 'BUYER' ? '/buyersDashboard' : '/signin')
         }
+    }, [isInitialized, user, router])
 
-        setIsAuthorized(true)
-        setIsChecking(false)
-    }, [router])
+    const isAuthorized = isInitialized && user?.role === 'SELLER'
 
-    // Show loading while checking authorization
-    if (isChecking) {
+    if (!isAuthorized) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9A227]"></div>
             </div>
         )
-    }
-
-    // Don't render if not authorized
-    if (!isAuthorized) {
-        return null
     }
 
     return <>{children}</>

@@ -8,6 +8,7 @@ import bidsService from "@/app/lib/api/services/bidsService";
 import { useBidDetail } from "@/app/hooks/useApi";
 import { AcceptBidModal, CounterOfferModal, DeclineBidModal } from "@/app/Components/BidModals";
 import { SuccessModal } from "@/app/Components/Modals";
+import { getErrorMessage } from "@/app/lib/api/client";
 
 import { useToast } from '@/app/Components/Toast';
 const formatDateTime = (value?: string | null) => {
@@ -43,6 +44,8 @@ export default function BidDetails() {
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["bid", bidId] });
     queryClient.invalidateQueries({ queryKey: ["bids"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+    queryClient.invalidateQueries({ queryKey: ["wallet"] });
   };
 
   const handleAccept = async (price: number, notes?: string) => {
@@ -55,9 +58,8 @@ export default function BidDetails() {
         title: "Offer accepted",
         message: "The buyer has been notified and next steps can begin.",
       });
-    } catch (err) {
-      console.error("Failed to accept bid:", err);
-      toast.error("Failed to accept bid. Please try again.");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to accept bid. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -74,9 +76,8 @@ export default function BidDetails() {
       setShowCounter(false);
       refresh();
       setSuccess({ title: "Counter offer sent", message: "The buyer has been notified." });
-    } catch (err) {
-      console.error("Failed to send counter offer:", err);
-      toast.error("Failed to send counter offer. Please try again.");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to send counter offer. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -89,9 +90,8 @@ export default function BidDetails() {
       setShowDecline(false);
       refresh();
       setSuccess({ title: "Offer declined", message: "The buyer has been notified." });
-    } catch (err) {
-      console.error("Failed to decline bid:", err);
-      toast.error("Failed to decline bid. Please try again.");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to decline bid. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -116,7 +116,7 @@ export default function BidDetails() {
     );
   }
 
-  const images: string[] = bid.listing?.images?.length ? bid.listing.images : ["/bid1.png"];
+  const images: string[] = bid.listing?.images?.filter(Boolean).length ? bid.listing.images.filter(Boolean) : ["/bid1.png"];
   const isPending = bid.status === "pending";
 
   return (
@@ -140,8 +140,9 @@ export default function BidDetails() {
           {/* Left */}
           <div className="lg:col-span-2 space-y-4">
             <h2 className="font-semibold text-lg">{bid.listing?.name}</h2>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={images[currentImage]}
+              src={images[currentImage] || "/bid1.png"}
               alt={bid.listing?.name || "Listing"}
               className="w-full h-64 md:h-80 object-cover rounded-lg"
             />
@@ -213,7 +214,7 @@ export default function BidDetails() {
           {/* Right panel */}
           <div className="p-4 space-y-4 mt-12 h-fit">
             {bid.timeline?.length > 0 ? (
-              bid.timeline.map((item: any, index: number) => (
+              bid.timeline.map((item, index) => (
                 <div key={index}>
                   <p className="text-xl text-gray-500">{item.label}</p>
                   {item.timestamp && (

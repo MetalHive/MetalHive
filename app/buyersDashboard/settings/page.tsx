@@ -1,38 +1,30 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { useBuyerProfile, useUpdateBuyerProfile, useUploadBuyerLogo } from '../../hooks/useBuyer';
+import type { BuyerProfile } from '@/app/lib/api/services/buyerService';
+import { getErrorMessage } from '@/app/lib/api/client';
 
 import { useToast } from '@/app/Components/Toast';
-const SettingsPage = () => {
+
+/**
+ * The editable form. It is mounted only once the profile has loaded (and
+ * re-keyed on the profile id), so its state is seeded directly from the data
+ * rather than copied in with an effect.
+ */
+const ProfileForm: React.FC<{ profile: BuyerProfile }> = ({ profile }) => {
     const toast = useToast();
-    const { data: profile, isLoading: loadingProfile } = useBuyerProfile();
     const updateProfile = useUpdateBuyerProfile();
     const uploadLogo = useUploadBuyerLogo();
 
     const [formData, setFormData] = useState({
-        fullName: '',
-        email: '',
-        phone: '',
-        companyName: '',
+        fullName: profile.fullName || '',
+        phone: profile.phone || '',
+        companyName: profile.companyName || '',
     });
 
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string>('');
-
-    // Pre-fill form when profile data loads
-    useEffect(() => {
-        if (profile) {
-            setFormData({
-                fullName: profile.fullName || '',
-                email: profile.email || '',
-                phone: profile.phone || '',
-                companyName: profile.companyName || '',
-            });
-            setPreviewUrl(profile.companyLogo || '');
-        }
-    }, [profile]);
+    const [previewUrl, setPreviewUrl] = useState<string>(profile.companyLogo || '');
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -45,7 +37,6 @@ const SettingsPage = () => {
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setSelectedFile(file);
             const imageUrl = URL.createObjectURL(file);
             setPreviewUrl(imageUrl);
 
@@ -53,10 +44,9 @@ const SettingsPage = () => {
             try {
                 await uploadLogo.mutateAsync(file);
                 toast.success('Profile logo uploaded successfully!');
-            } catch (error) {
-                console.error('Failed to upload logo:', error);
-                toast.error('Failed to upload profile logo. Please try again.');
-                setPreviewUrl(profile?.companyLogo || '');
+            } catch (error: unknown) {
+                toast.error(getErrorMessage(error, 'Failed to upload profile logo. Please try again.'));
+                setPreviewUrl(profile.companyLogo || '');
             }
         }
     };
@@ -65,19 +55,10 @@ const SettingsPage = () => {
         try {
             await updateProfile.mutateAsync(formData);
             toast.success('Profile updated successfully!');
-        } catch (error) {
-            console.error('Failed to update profile:', error);
-            toast.error('Failed to update profile. Please try again.');
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Failed to update profile. Please try again.'));
         }
     };
-
-    if (loadingProfile) {
-        return (
-            <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9A227]"></div>
-            </div>
-        );
-    }
 
     return (
         <main className="p-10 mt-16 lg:mt-0 mx-auto max-w-4xl">
@@ -97,6 +78,7 @@ const SettingsPage = () => {
                     <div className="flex items-start gap-5">
                         <div className="relative">
                             {previewUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     src={previewUrl}
                                     alt="Profile"
@@ -105,7 +87,7 @@ const SettingsPage = () => {
                             ) : (
                                 <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
                                     <span className="text-2xl text-gray-400">
-                                        {formData.fullName.charAt(0).toUpperCase() || profile?.fullName?.charAt(0).toUpperCase() || 'U'}
+                                        {formData.fullName.charAt(0).toUpperCase() || profile.fullName?.charAt(0).toUpperCase() || 'U'}
                                     </span>
                                 </div>
                             )}
@@ -118,13 +100,16 @@ const SettingsPage = () => {
                                 className="inline-flex items-center gap-2 px-6 py-3 border border-[#ececec] rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                             >
                                 <Upload className="w-4 h-4 text-[#737780]" />
-                                <span className="text-sm font-medium text-[#17181a]">Upload image</span>
+                                <span className="text-sm font-medium text-[#17181a]">
+                                    {uploadLogo.isPending ? 'Uploading...' : 'Upload image'}
+                                </span>
                                 <input
                                     id="profile-upload"
                                     type="file"
                                     accept="image/*"
                                     className="hidden"
                                     onChange={handleImageUpload}
+                                    disabled={uploadLogo.isPending}
                                 />
                             </label>
                         </div>
@@ -171,8 +156,9 @@ const SettingsPage = () => {
                         <input
                             type="email"
                             name="email"
-                            value={profile?.email || ''} // Usually email is not editable directly here or read-only
+                            value={profile.email || ''}
                             disabled
+                            readOnly
                             placeholder="your.email@example.com"
                             className="w-full px-4 py-3 border border-[#ececec] rounded-lg text-sm text-[#17181a] bg-gray-50 placeholder:text-[#999999] focus:outline-none"
                         />
@@ -208,6 +194,30 @@ const SettingsPage = () => {
             </div>
         </main>
     );
+};
+
+const SettingsPage = () => {
+    const { data: profile, isLoading, error } = useBuyerProfile();
+
+    if (isLoading) {
+        return (
+            <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9A227]"></div>
+            </div>
+        );
+    }
+
+    if (error || !profile) {
+        return (
+            <main className="p-10 mt-16 lg:mt-0 mx-auto max-w-4xl">
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    We could not load your profile. Please refresh the page.
+                </div>
+            </main>
+        );
+    }
+
+    return <ProfileForm key={profile.id} profile={profile} />;
 };
 
 export default SettingsPage;

@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import SideBar from "../Components/SideBar";
-import Image from "next/image";
 import { FiPlus } from "react-icons/fi";
 import { FaSortDown } from "react-icons/fa";
-import { IoFilter } from "react-icons/io5";
 import { LuCalendarRange } from "react-icons/lu";
 import { FiTag, FiInbox, FiShoppingCart, FiDollarSign } from "react-icons/fi";
 import FeatureCards from "../Components/FeatureCards";
@@ -14,29 +12,36 @@ import Link from "next/link";
 import { sellerSidebarLinks } from "../lib/sidebarConfig";
 import { useDashboardStats } from "../hooks/useApi";
 import { useAuth } from "../hooks/useAuth";
+import { useUserProfile } from "../hooks/useSettings";
 
-const page = () => {
+type Period = "30days" | "7days" | "2weeks" | "24hours";
+
+const SellerDashboardPage = () => {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<"30days" | "7days" | "2weeks" | "24hours">("30days");
+  const [selected, setSelected] = useState<Period>("30days");
   const { user } = useAuth();
+  const { data: profile } = useUserProfile();
 
   // Fetch dashboard stats with selected period
   const { data: stats, isLoading, error } = useDashboardStats(selected);
 
   // Map display labels to API values
-  const periodMap: Record<string, "30days" | "7days" | "2weeks" | "24hours"> = {
+  const periodMap: Record<string, Period> = {
     "30 days": "30days",
     "2 weeks": "2weeks",
     "7 days": "7days",
     "24 hours": "24hours",
   };
 
-  const reversePeriodMap: Record<string, string> = {
+  const reversePeriodMap: Record<Period, string> = {
     "30days": "30 days",
     "2weeks": "2 weeks",
     "7days": "7 days",
     "24hours": "24 hours",
   };
+
+  const displayName =
+    profile?.name?.trim() || (user?.email ? user.email.split('@')[0] : 'Seller');
 
   return (
 
@@ -48,22 +53,15 @@ const page = () => {
         <div className="flex flex-col lg:flex-row justify-between gap-4">
           <div>
             <h1 className="text-2xl text-[#17181A] font-semibold">
-              Welcome back,{user?.email ? user.email.split('@')[0] : 'Seller'}
+              Welcome back, {displayName}
             </h1>
             <p className="text-[#737780]">
-              Here's a quick look at your listings and recent activity.
+              Here&apos;s a quick look at your listings and recent activity.
             </p>
           </div>
 
           <div>
             <div className="flex flex-wrap items-center gap-3">
-
-
-              <button className="border flex items-center gap-2 border-gray-300 px-4 py-2 rounded-md text-[15px] font-normal">
-                <IoFilter /> Filter
-              </button>
-
-
               <div className="relative">
                 <button
                   onClick={() => setOpen(!open)}
@@ -150,7 +148,9 @@ const page = () => {
                   <FiDollarSign size={20} />
                   <span className="text-[15px] font-normal">Pending Payouts</span>
                 </div>
-                <p className="text-xl font-semibold mt-2">{stats?.pendingPayouts || 0}</p>
+                <p className="text-xl font-semibold mt-2">
+                  ${Number(stats?.pendingPayouts || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
               </div>
 
             </div>
@@ -164,4 +164,4 @@ const page = () => {
   )
 }
 
-export default page
+export default SellerDashboardPage
