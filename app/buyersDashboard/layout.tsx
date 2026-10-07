@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import SideBar from '@/app/Components/SideBar'
 import TopBar from './components/Topbar'
 import { buyerSidebarLinks } from '../lib/sidebarConfig'
-import { getStoredUser, isAuthenticated } from '@/app/lib/api/auth'
+import { useAuthStore } from '@/app/stores/AuthStore'
 
 export default function BuyersDashboardLayout({
   children,
@@ -13,45 +13,32 @@ export default function BuyersDashboardLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const [isAuthorized, setIsAuthorized] = useState(false)
-  const [isChecking, setIsChecking] = useState(true)
-
-  useEffect(() => {
-    // Check authentication and authorization
-    if (!isAuthenticated()) {
-      router.push('/signin')
-      return
-    }
-
-    const user = getStoredUser()
-    if (user?.role !== 'BUYER') {
-      // If user is a seller, redirect to seller dashboard
-      if (user?.role === 'SELLER') {
-        router.push('/sellerDashBoard')
-      } else {
-        router.push('/signin')
-      }
-      return
-    }
-
-    setIsAuthorized(true)
-    setIsChecking(false)
-  }, [router])
-
   const pathname = usePathname()
+  const user = useAuthStore((s) => s.user)
+  const isInitialized = useAuthStore((s) => s.isInitialized)
 
-  // Show loading while checking authorization
-  if (isChecking) {
+  // AuthInitializer hydrates the store from localStorage (and validates the
+  // session with /auth/me/). Until that has happened we show a spinner; once
+  // it has, anyone who is not a buyer is sent to the right place.
+  useEffect(() => {
+    if (!isInitialized) return
+    if (!user) {
+      router.replace('/signin')
+      return
+    }
+    if (user.role !== 'BUYER') {
+      router.replace(user.role === 'SELLER' ? '/sellerDashBoard' : '/signin')
+    }
+  }, [isInitialized, user, router])
+
+  const isAuthorized = isInitialized && user?.role === 'BUYER'
+
+  if (!isAuthorized) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9A227]"></div>
       </div>
     )
-  }
-
-  // Don't render if not authorized
-  if (!isAuthorized) {
-    return null
   }
 
   // Check if we are in settings pages

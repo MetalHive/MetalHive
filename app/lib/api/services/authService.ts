@@ -1,5 +1,5 @@
 import apiClient from '../client';
-import { AuthResponse, saveAuth, clearAuth } from '../auth';
+import { AuthResponse, User, saveAuth, clearAuth, getRefreshToken } from '../auth';
 
 export interface LoginCredentials {
     email: string;
@@ -25,8 +25,6 @@ export interface SellerRegistrationData {
     password_confirm: string;
     business_type: 'INDIVIDUAL' | 'COMPANY';
     address: string;
-    // description: string;
-    // company_logo?: File;
 }
 
 const authService = {
@@ -74,11 +72,6 @@ const authService = {
         formData.append('password_confirm', data.password_confirm);
         formData.append('business_type', data.business_type);
         formData.append('address', data.address);
-        // formData.append('description', data.description);
-
-        // if (data.company_logo) {
-        //     formData.append('company_logo', data.company_logo);
-        // }
 
         const response = await apiClient.post<AuthResponse>('/auth/register/seller/', formData, {
             headers: {
@@ -104,9 +97,41 @@ const authService = {
         return response.data;
     },
 
-    // Logout
-    logout(): void {
-        clearAuth();
+    // Current user — used to validate a stored session.
+    async me(): Promise<User> {
+        const response = await apiClient.get<User>('/auth/me/');
+        return response.data;
+    },
+
+    /**
+     * Best-effort post-registration profile fill. Registration has no name /
+     * phone fields, so the profile is patched right afterwards. Failures are
+     * swallowed: the account exists either way.
+     */
+    async completeProfile(data: { name?: string; phone?: string }): Promise<void> {
+        const payload: { name?: string; phone?: string } = {};
+        if (data.name && data.name.trim()) payload.name = data.name.trim();
+        if (data.phone && data.phone.trim()) payload.phone = data.phone.trim();
+        if (Object.keys(payload).length === 0) return;
+        try {
+            await apiClient.patch('/auth/user/profile/', payload);
+        } catch {
+            // non-blocking
+        }
+    },
+
+    // Logout: invalidate the refresh token server-side, then clear local state.
+    async logout(): Promise<void> {
+        const refresh = getRefreshToken();
+        try {
+            if (refresh) {
+                await apiClient.post('/auth/logout/', { refresh });
+            }
+        } catch {
+            // The session is being discarded regardless of what the server says.
+        } finally {
+            clearAuth();
+        }
     },
 };
 

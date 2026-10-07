@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import FormField from "@/app/Components/FormField";
-import { useListingFormStore } from "@/app/stores/ListingFormStore";
+import { useListingFormStore, MaterialType, ConditionType } from "@/app/stores/ListingFormStore";
+import type { WeightUnit } from "@/app/lib/api/services/listingsService";
 
-export default function BasicDetails() {
+interface BasicDetailsProps {
+  /** Validation errors from the wizard, keyed by field. */
+  errors?: Record<string, string>;
+}
+
+export default function BasicDetails({ errors = {} }: BasicDetailsProps) {
   const {
     materialName,
     materialType,
@@ -14,12 +20,6 @@ export default function BasicDetails() {
     location,
     updateBasicDetails
   } = useListingFormStore();
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const updateFormData = (newData: any) => {
-    updateBasicDetails(newData);
-  };
 
   return (
     <div className="max-w-xl">
@@ -38,7 +38,7 @@ export default function BasicDetails() {
           label="Material Name"
           placeholder="e.g. Copper Scrap"
           value={materialName}
-          onChange={(e) => updateFormData({ materialName: e.target.value })}
+          onChange={(e) => updateBasicDetails({ materialName: e.target.value })}
           error={errors.materialName}
         />
 
@@ -49,8 +49,8 @@ export default function BasicDetails() {
           </label>
           <select
             value={materialType}
-            onChange={(e) => updateFormData({ materialType: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            onChange={(e) => updateBasicDetails({ materialType: e.target.value as MaterialType | '' })}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 ${errors.materialType ? 'border-red-500' : 'border-gray-300'}`}
           >
             <option value="">Select material type</option>
             <option value="Copper">Copper</option>
@@ -69,8 +69,8 @@ export default function BasicDetails() {
           </label>
           <select
             value={condition}
-            onChange={(e) => updateFormData({ condition: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            onChange={(e) => updateBasicDetails({ condition: e.target.value as ConditionType | '' })}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 ${errors.condition ? 'border-red-500' : 'border-gray-300'}`}
           >
             <option value="">Select condition</option>
             <option value="Processed">Processed</option>
@@ -90,7 +90,7 @@ export default function BasicDetails() {
               label="Estimated Weight"
               placeholder="e.g. 500"
               value={quantity}
-              onChange={(e) => updateFormData({ quantity: e.target.value })}
+              onChange={(e) => updateBasicDetails({ quantity: e.target.value })}
               error={errors.quantity}
             />
           </div>
@@ -98,7 +98,7 @@ export default function BasicDetails() {
             <label className="block text-sm font-medium mb-1">Unit</label>
             <select
               value={quantityUnit}
-              onChange={(e) => updateFormData({ quantityUnit: e.target.value as typeof quantityUnit })}
+              onChange={(e) => updateBasicDetails({ quantityUnit: e.target.value as WeightUnit })}
               className="w-full border border-gray-300 rounded-md px-3 py-2"
             >
               <option value="kg">Kilograms</option>
@@ -116,7 +116,7 @@ export default function BasicDetails() {
               label="Price"
               placeholder="e.g. 450"
               value={basePrice}
-              onChange={(e) => updateFormData({ basePrice: e.target.value })}
+              onChange={(e) => updateBasicDetails({ basePrice: e.target.value })}
               error={errors.basePrice}
             />
           </div>
@@ -124,7 +124,7 @@ export default function BasicDetails() {
             <label className="block text-sm font-medium mb-1">Per</label>
             <select
               value={priceUnit}
-              onChange={(e) => updateFormData({ priceUnit: e.target.value as typeof priceUnit })}
+              onChange={(e) => updateBasicDetails({ priceUnit: e.target.value as WeightUnit })}
               className="w-full border border-gray-300 rounded-md px-3 py-2"
             >
               <option value="kg">Kilogram</option>
@@ -140,7 +140,7 @@ export default function BasicDetails() {
           label="Location"
           placeholder="e.g. Ontario, Canada"
           value={location}
-          onChange={(e) => updateFormData({ location: e.target.value })}
+          onChange={(e) => updateBasicDetails({ location: e.target.value })}
           error={errors.location}
         />
       </div>

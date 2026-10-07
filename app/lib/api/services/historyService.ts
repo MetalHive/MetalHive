@@ -11,7 +11,8 @@ export interface Sale {
     buyer: {
         id: string;
         name: string;
-    };
+    } | null;
+    /** Already unit-suffixed (e.g. "500kg"); do not append a unit. */
     quantity: string;
     finalPrice: number;
     priceUnit: string;
@@ -28,6 +29,7 @@ export interface SalesHistoryResponse {
         page: number;
         limit: number;
         pages: number;
+        totalPages?: number;
     };
     summary: {
         totalSales: number;

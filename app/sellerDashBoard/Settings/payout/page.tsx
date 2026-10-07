@@ -1,9 +1,11 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import SettingsSidebar from "../../../Components/SettingsSidebar";
 import { SettingsCard, TextInput, SettingsButton } from "../../../Components/SettingsComponents";
 import { usePayoutDetails, useUpdatePayoutDetails } from '../../../hooks/useSettings';
+import type { PayoutDetails } from '@/app/lib/api/services/settingsService';
+import { getErrorMessage, getFieldErrors } from '@/app/lib/api/client';
 
 // Values must be the API's choice keys. The select previously carried the
 // display labels ("Bank Transfer"), which the backend rejected outright with
@@ -15,32 +17,23 @@ const PAYMENT_METHODS = [
 
 const digitsOnly = (value: string) => value.replace(/[\s-]/g, '');
 
-const PayoutPage = () => {
-    const { data: existingPayout, isLoading } = usePayoutDetails();
+/**
+ * The form proper. It is mounted only once the existing payout details have
+ * loaded (and re-keyed on their id), so state is seeded from props instead of
+ * copied in with an effect.
+ */
+const PayoutForm: React.FC<{ existingPayout: PayoutDetails | null }> = ({ existingPayout }) => {
     const updatePayout = useUpdatePayoutDetails();
 
     const [payoutData, setPayoutData] = useState({
-        paymentMethod: 'bank_transfer',
-        accountHolderName: '',
-        bankName: '',
-        accountNumber: '',
-        routingNumber: '',
+        paymentMethod: existingPayout?.paymentMethod || 'bank_transfer',
+        accountHolderName: existingPayout?.accountHolderName || '',
+        bankName: existingPayout?.bankName || '',
+        accountNumber: '', // Don't pre-fill for security
+        routingNumber: existingPayout?.routingNumber || '',
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [saved, setSaved] = useState(false);
-
-    // Pre-fill form when data loads
-    useEffect(() => {
-        if (existingPayout) {
-            setPayoutData({
-                paymentMethod: existingPayout.paymentMethod || 'bank_transfer',
-                accountHolderName: existingPayout.accountHolderName || '',
-                bankName: existingPayout.bankName || '',
-                accountNumber: '', // Don't pre-fill for security
-                routingNumber: existingPayout.routingNumber || '',
-            });
-        }
-    }, [existingPayout]);
 
     const handleInputChange = (field: string, value: string) => {
         setPayoutData(prev => ({ ...prev, [field]: value }));
@@ -94,40 +87,21 @@ const PayoutPage = () => {
             });
             setSaved(true);
             setErrors({});
-        } catch (error: any) {
+        } catch (error: unknown) {
             // Surface what the API actually objected to instead of a generic
             // "please try again".
-            const details = error?.response?.data?.errors?.details;
-            if (Array.isArray(details) && details.length) {
-                setErrors(
-                    details.reduce((acc: Record<string, string>, d: any) => {
-                        acc[d.field] = d.message;
-                        return acc;
-                    }, {})
-                );
+            const fieldErrors = getFieldErrors(error);
+            if (Object.keys(fieldErrors).length) {
+                setErrors(fieldErrors);
             } else {
                 setErrors({
-                    form: error?.response?.data?.message || 'Failed to save payout details. Please try again.',
+                    form: getErrorMessage(error, 'Failed to save payout details. Please try again.'),
                 });
             }
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex min-h-screen bg-[#fafafa]">
-                <SettingsSidebar />
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9A227]"></div>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="flex min-h-screen bg-[#fafafa]">
-            <SettingsSidebar />
-
             <main className="flex-1 p-10 mt-16 lg:mt-0 mx-30">
                 <div className="max-w-[612px]">
                     {/* Header */}
@@ -242,6 +216,22 @@ const PayoutPage = () => {
                     </SettingsCard>
                 </div>
             </main>
+    );
+};
+
+const PayoutPage = () => {
+    const { data: existingPayout, isLoading } = usePayoutDetails();
+
+    return (
+        <div className="flex min-h-screen bg-[#fafafa]">
+            <SettingsSidebar />
+            {isLoading ? (
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9A227]"></div>
+                </div>
+            ) : (
+                <PayoutForm key={existingPayout?.id ?? 'new'} existingPayout={existingPayout ?? null} />
+            )}
         </div>
     );
 };

@@ -6,6 +6,7 @@ import { SettingsCard, SettingsSection, PasswordInput, TextInput, SettingsButton
 import { useUserProfile, useChangeEmail, useChangePassword } from '../../../hooks/useSettings';
 
 import { useToast } from '@/app/Components/Toast';
+import { getErrorCode, getErrorMessage } from '@/app/lib/api/client';
 const SecurityPage = () => {
     const toast = useToast();
     const { data: profile } = useUserProfile();
@@ -35,12 +36,11 @@ const SecurityPage = () => {
             toast.success('Email changed successfully! Please verify your new email.');
             setEmail('');
             setCurrentPasswordForEmail('');
-        } catch (error: any) {
-            console.error('Failed to change email:', error);
-            if (error.response?.data?.errors?.code === 'INVALID_PASSWORD') {
+        } catch (error: unknown) {
+            if (getErrorCode(error) === 'INVALID_PASSWORD') {
                 toast.error('Current password is incorrect');
             } else {
-                toast.error('Failed to change email. Please try again.');
+                toast.error(getErrorMessage(error, 'Failed to change email. Please try again.'));
             }
         }
     };
@@ -67,12 +67,11 @@ const SecurityPage = () => {
                 confirmPassword: '',
             });
             toast.success('Password changed successfully!');
-        } catch (error: any) {
-            console.error('Failed to change password:', error);
-            if (error.response?.data?.errors?.code === 'INVALID_PASSWORD') {
+        } catch (error: unknown) {
+            if (getErrorCode(error) === 'INVALID_PASSWORD') {
                 toast.error('Current password is incorrect');
             } else {
-                toast.error('Failed to change password. Please try again.');
+                toast.error(getErrorMessage(error, 'Failed to change password. Please try again.'));
             }
         }
     };

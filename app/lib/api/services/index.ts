@@ -12,7 +12,7 @@ export { default as imageUploadService } from './imageUploadService';
 export type { LoginCredentials, BuyerRegistrationData, SellerRegistrationData } from './authService';
 export type { DashboardStats } from './dashboardService';
 export type { Listing, ListingDetail, ListingsResponse, CreateListingData } from './listingsService';
-export type { Bid, BidDetail, BidsResponse } from './bidsService';
+export type { Bid, BidDetail, BidsResponse, SellerBidCounts } from './bidsService';
 export type { WalletSummary, MonthlyEarnings, Transaction, TransactionsResponse } from './walletService';
 export type { Sale, SalesHistoryResponse } from './historyService';
 export type {
@@ -26,5 +26,9 @@ export type {
     BuyerBidsResponse,
     Purchase,
     PurchaseHistoryResponse,
-    PlaceBidData
+    PurchaseSummary,
+    PlaceBidData,
+    EditBidData,
+    ExistingBid,
+    VerificationStatus
 } from './buyerService';

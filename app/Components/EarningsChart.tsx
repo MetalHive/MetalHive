@@ -18,21 +18,18 @@ const EarningsChart = ({ earnings, isLoading }: Props) => {
         <h2 className="text-lg font-semibold text-gray-900">
           Earnings for the month
         </h2>
-
-        <div className="flex items-center gap-3">
-          <button className="px-3 py-2 text-sm border rounded-md text-gray-600 hover:bg-gray-50">
-            Filter
-          </button>
-
-          <input
-            type="text"
-            placeholder="Search"
-            className="px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-400"
-          />
-        </div>
       </div>
 
       {/* Chart */}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#C9A227]"></div>
+        </div>
+      ) : earnings.length === 0 ? (
+        <div className="flex items-center justify-center h-64 text-sm text-gray-500">
+          No earnings recorded yet.
+        </div>
+      ) : (
       <div className="flex items-end justify-between gap-3 h-64">
         {earnings.map((item) => {
           const height = (item.value / maxValue) * 100
@@ -60,6 +57,7 @@ const EarningsChart = ({ earnings, isLoading }: Props) => {
           )
         })}
       </div>
+      )}
     </div>
   )
 }

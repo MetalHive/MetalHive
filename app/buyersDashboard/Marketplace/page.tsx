@@ -4,19 +4,40 @@ import ProductCard from '../components/marketPlaceCard';
 import SearchFilterBar from '../components/filterMarket';
 import Link from 'next/link';
 import { useMarketplaceListings } from '../../hooks/useBuyer';
+import { useDebouncedValue } from '../../hooks/useDebounce';
+import Pagination from '@/app/Components/Pagination';
+import { formatDate } from '@/app/lib/utils/formatters';
 
-const Page = () => {
+const MarketplacePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [materialType, setMaterialType] = useState('');
   const [location, setLocation] = useState('');
+  const [page, setPage] = useState(1);
+
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
 
   const { data, isLoading, error } = useMarketplaceListings({
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     materialType: materialType || undefined,
     location: location || undefined,
+    page,
   });
 
   const listings = data?.listings || [];
+
+  // Any filter change starts again from the first page.
+  const handleSearch = (value: string) => {
+    setSearchQuery(value);
+    setPage(1);
+  };
+  const handleMaterialType = (value: string) => {
+    setMaterialType(value);
+    setPage(1);
+  };
+  const handleLocation = (value: string) => {
+    setLocation(value);
+    setPage(1);
+  };
 
   return (
     <div>
@@ -28,9 +49,9 @@ const Page = () => {
       </div>
 
       <SearchFilterBar
-        onSearch={setSearchQuery}
-        onMaterialTypeChange={setMaterialType}
-        onLocationChange={setLocation}
+        onSearch={handleSearch}
+        onMaterialTypeChange={handleMaterialType}
+        onLocationChange={handleLocation}
       />
 
       {/* CARDS */}
@@ -70,7 +91,7 @@ const Page = () => {
                   title={listing.materialName}
                   price={`$${listing.basePrice} / ${listing.priceUnit}`}
                   location={listing.location}
-                  timeAgo={new Date(listing.createdAt).toLocaleDateString()}
+                  timeAgo={formatDate(listing.createdAt)}
                   description={listing.description}
                   images={listing.images}
                 />
@@ -78,9 +99,13 @@ const Page = () => {
             ))}
           </div>
         )}
+
+        {!isLoading && !error && (
+          <Pagination page={page} pagination={data?.pagination} onPageChange={setPage} />
+        )}
       </div>
     </div>
   );
 };
 
-export default Page;
+export default MarketplacePage;

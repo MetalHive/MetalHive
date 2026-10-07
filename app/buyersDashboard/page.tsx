@@ -1,6 +1,7 @@
 "use client";
 
-import { Star } from "lucide-react";
+import Link from "next/link";
+import { Star, ShieldAlert } from "lucide-react";
 import { MdVerified } from "react-icons/md";
 import MarketPlace from "./components/MarketPlace";
 import { useBuyerProfile, useBuyerDashboardStats } from "../hooks/useBuyer";
@@ -8,6 +9,10 @@ import { useBuyerProfile, useBuyerDashboardStats } from "../hooks/useBuyer";
 export default function CompanyOverview() {
   const { data: profile, isLoading: profileLoading } = useBuyerProfile();
   const { data: stats, isLoading: statsLoading } = useBuyerDashboardStats();
+
+  const verificationStatus =
+    profile?.verificationStatus ?? (profile?.isVerified ? 'verified' : 'pending');
+  const isVerified = verificationStatus === 'verified';
 
   const statsData = [
     { label: "Active Bids", value: stats?.activeBids ?? 0 },
@@ -18,6 +23,38 @@ export default function CompanyOverview() {
 
   return (
     <div className="space-y-6 ">
+      {/* Verification banner */}
+      {!profileLoading && profile && !isVerified && (
+        <div
+          role="status"
+          className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-sm ${
+            verificationStatus === 'rejected'
+              ? 'border-red-200 bg-red-50 text-red-800'
+              : 'border-amber-200 bg-amber-50 text-amber-900'
+          }`}
+        >
+          <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-medium">
+              {verificationStatus === 'rejected'
+                ? 'Verification rejected — bidding is locked'
+                : 'Verification in progress — bidding unlocks once verified'}
+            </p>
+            <p className="mt-0.5">
+              {verificationStatus === 'rejected'
+                ? 'Your company documents were not accepted. Please contact support to resolve this.'
+                : 'Our team is reviewing your company documents. You can browse the marketplace in the meantime.'}
+            </p>
+          </div>
+          <Link
+            href="/buyersDashboard/settings/verification"
+            className="shrink-0 font-medium underline underline-offset-2"
+          >
+            View status
+          </Link>
+        </div>
+      )}
+
       {/* Profile Header */}
       <div className="shadow-sm rounded-lg  p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         {/* Left */}
@@ -25,6 +62,7 @@ export default function CompanyOverview() {
           {profileLoading ? (
             <div className="h-40 w-40 rounded-full bg-gray-200 animate-pulse" />
           ) : profile?.companyLogo ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={profile.companyLogo}
               alt={profile.companyName}
@@ -48,7 +86,7 @@ export default function CompanyOverview() {
             )}
 
             <div className=" gap-3 mt-1 text-sm">
-              {profile?.isVerified && (
+              {isVerified && (
                 <p className="flex items-center gap-1 text-lg text-[#17181A] font-semibold">
                   <MdVerified className="text-[#C9A227]" size={23} />
                   Identity Verified
@@ -64,9 +102,12 @@ export default function CompanyOverview() {
         </div>
 
         {/* Right */}
-        <button className="self-start md:self-center bg-[#C9A227] text-white text-sm font-medium px-4 py-2 rounded-md">
+        <Link
+          href="/buyersDashboard/settings"
+          className="self-start md:self-center bg-[#C9A227] text-white text-sm font-medium px-4 py-2 rounded-md"
+        >
           Edit Company Profile
-        </button>
+        </Link>
       </div>
 
       {/* Stats */}

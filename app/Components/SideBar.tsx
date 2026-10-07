@@ -1,21 +1,46 @@
 "use client"
 
 import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, LogOut } from 'lucide-react'
 import Image from "next/image"
 import Link from 'next/link'
 import { SidebarLink } from '@/app/lib/sidebarConfig'
 import { usePathname } from 'next/navigation'
+import { useAuthStore } from '@/app/stores/AuthStore'
+import { useWalletSummary } from '@/app/hooks/useApi'
 
 interface SidebarProps {
   links: SidebarLink[]
 }
 
+/** Live available balance for the seller "Wallet" link. */
+function WalletBadge() {
+  const { data } = useWalletSummary()
+  if (!data || typeof data.availableBalance !== 'number') return null
+  return (
+    <span className="text-gray-400 font-medium">
+      ${data.availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+    </span>
+  )
+}
+
 export default function SideBar({ links }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
   const pathname = usePathname()
+  const logout = useAuthStore((s) => s.logout)
 
   const toggleSidebar = () => setIsOpen(!isOpen)
+
+  const handleLogout = async () => {
+    if (loggingOut) return
+    setLoggingOut(true)
+    try {
+      await logout()
+    } finally {
+      setLoggingOut(false)
+    }
+  }
 
   return (
     <>
@@ -45,7 +70,7 @@ export default function SideBar({ links }: SidebarProps) {
           w-80
         `}
       >
-        <div className="p-6">
+        <div className="p-6 flex flex-col h-full">
           {/* Logo */}
           <div className="mb-8">
             <Image
@@ -85,15 +110,24 @@ export default function SideBar({ links }: SidebarProps) {
                     </span>
                   </div>
 
-                  {link.badge && (
-                    <span className="text-gray-400 font-medium">
-                      {link.badge}
-                    </span>
-                  )}
+                  {link.badge === 'walletBalance' && <WalletBadge />}
                 </Link>
               )
             })}
           </nav>
+
+          {/* Logout */}
+          <div className="mt-auto pt-4 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="flex items-center gap-4 w-full px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+            >
+              <LogOut size={24} />
+              <span className="font-medium">{loggingOut ? 'Logging out...' : 'Logout'}</span>
+            </button>
+          </div>
         </div>
       </aside>
     </>

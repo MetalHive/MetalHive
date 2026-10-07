@@ -1,10 +1,13 @@
 import { create } from 'zustand';
 import { User, AuthResponse } from '../lib/api/auth';
+import { getErrorMessage } from '../lib/api/client';
 import authService, { LoginCredentials, SellerRegistrationData, BuyerRegistrationData } from '../lib/api/services/authService';
 
 interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
+    /** True once the stored session has been read on the client. */
+    isInitialized: boolean;
     isLoading: boolean;
     error: string | null;
 
@@ -12,14 +15,16 @@ interface AuthState {
     login: (credentials: LoginCredentials) => Promise<void>;
     registerSeller: (data: SellerRegistrationData) => Promise<void>;
     registerBuyer: (data: BuyerRegistrationData) => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     setUser: (user: User | null) => void;
+    setInitialized: (value: boolean) => void;
     clearError: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     isAuthenticated: false,
+    isInitialized: false,
     isLoading: false,
     error: null,
 
@@ -30,12 +35,13 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({
                 user: authData.user,
                 isAuthenticated: true,
+                isInitialized: true,
                 isLoading: false,
                 error: null
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             set({
-                error: error.response?.data?.error?.message || 'Login failed',
+                error: getErrorMessage(error, 'Login failed. Please check your email and password.'),
                 isLoading: false,
                 isAuthenticated: false
             });
@@ -46,28 +52,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     registerSeller: async (data: SellerRegistrationData) => {
         set({ isLoading: true, error: null });
         try {
-            console.log('[AuthStore] Starting seller registration...');
             const authData: AuthResponse = await authService.registerSeller(data);
-            console.log('[AuthStore] Registration successful, received:', authData);
-
             set({
                 user: authData.user,
                 isAuthenticated: true,
+                isInitialized: true,
                 isLoading: false,
                 error: null
             });
-            console.log('[AuthStore] State updated successfully');
-        } catch (error: any) {
-            console.error('[AuthStore] Registration error:', error);
-            console.error('[AuthStore] Error response:', error.response);
-
-            const errorMessage = error.response?.data?.error?.message
-                || error.response?.data?.message
-                || error.message
-                || 'Registration failed';
-
+        } catch (error: unknown) {
             set({
-                error: errorMessage,
+                error: getErrorMessage(error, 'Registration failed. Please try again.'),
                 isLoading: false,
                 isAuthenticated: false
             });
@@ -82,12 +77,13 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({
                 user: authData.user,
                 isAuthenticated: true,
+                isInitialized: true,
                 isLoading: false,
                 error: null
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             set({
-                error: error.response?.data?.error?.message || 'Registration failed',
+                error: getErrorMessage(error, 'Registration failed. Please try again.'),
                 isLoading: false,
                 isAuthenticated: false
             });
@@ -95,13 +91,16 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
 
-    logout: () => {
-        authService.logout();
+    logout: async () => {
+        await authService.logout();
         set({
             user: null,
             isAuthenticated: false,
             error: null
         });
+        if (typeof window !== 'undefined') {
+            window.location.href = '/signin';
+        }
     },
 
     setUser: (user: User | null) => {
@@ -109,6 +108,10 @@ export const useAuthStore = create<AuthState>((set) => ({
             user,
             isAuthenticated: !!user
         });
+    },
+
+    setInitialized: (value: boolean) => {
+        set({ isInitialized: value });
     },
 
     clearError: () => {

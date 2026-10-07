@@ -8,7 +8,6 @@ const Membership = () => {
 const router = useRouter()
   const handleSelect = (type:string) => {
     setSelected(type)
-    console.log(selected); 
   }
   const handleClick = () => {
    router.push(`/auth/${selected}`); 

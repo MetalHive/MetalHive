@@ -2,64 +2,48 @@
 
 import { useState } from "react";
 import { Search } from "lucide-react";
-import AccordionSection from "../Components/AccordionSection";
+import AccordionSection, { AccordionListing } from "../Components/AccordionSection";
 import { useListings } from "../hooks/useApi";
+import { useDebouncedValue } from "../hooks/useDebounce";
 
-interface Listing {
-  id: string;
-  image: string;
-  name: string;
-  type?: string;
-  color?: string;
-  size?: string;
-  quantity: number;
-  bids: number;
-  price: number;
-  paymentMethod?: string;
-  status: "Active" | "Inactive" | "Sold";
-}
+type Section = "Active" | "Sold" | "Inactive" | "Draft";
+
+const SECTION_STATUS: Record<Section, 'active' | 'sold' | 'inactive' | 'draft'> = {
+  Active: 'active',
+  Sold: 'sold',
+  Inactive: 'inactive',
+  Draft: 'draft',
+};
 
 const SellerDashboardTable = () => {
-  const [activeTab, setActiveTab] = useState<"Active" | "Sold" | "Inactive" | null>("Active");
+  const [openSection, setOpenSection] = useState<Section | null>("Active");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
 
-  // Map frontend tab to backend status
-  const getApiStatus = (tab: "Active" | "Sold" | "Inactive" | null) => {
-    if (tab === "Inactive") return "draft";
-    if (tab === "Active") return "active";
-    if (tab === "Sold") return "sold";
-    return "all";
-  };
-
-  // Fetch listings from API with mapped status
+  // Fetch listings for the open section; counts for every section come back
+  // with each response.
   const { data: listingsData, isLoading, error } = useListings({
-    status: getApiStatus(activeTab) as 'active' | 'inactive' | 'sold' | 'draft' | 'all',
-    search: searchQuery || undefined,
+    status: openSection ? SECTION_STATUS[openSection] : 'all',
+    search: debouncedSearch || undefined,
   });
 
-  // Map API data to component format
-  const listings: Listing[] = (listingsData?.listings || []).map((listing) => ({
+  const listings: AccordionListing[] = (listingsData?.listings || []).map((listing) => ({
     id: listing.id,
     image: listing.image || '/bid1.png',
     name: listing.name,
-    type: listing.materialType,
-    size: listing.quantity,
-    quantity: parseInt(listing.quantity) || 0,
+    quantity: listing.quantity,
     bids: listing.bidsCount,
     price: listing.price || 0,
-    // Map draft to Inactive for display
-    status: listing.status === 'draft' ? 'Inactive' :
-      (listing.status.charAt(0).toUpperCase() + listing.status.slice(1)) as "Active" | "Sold" | "Inactive",
+    status: listing.status.charAt(0).toUpperCase() + listing.status.slice(1),
   }));
 
-  const activeListings = listings.filter((l) => l.status === "Active");
-  const soldListings = listings.filter((l) => l.status === "Sold");
-  const inactiveListings = listings.filter((l) => l.status === "Inactive");
-
-  // Use counts from API if available, otherwise from filtered lists
-  const activeCount = listingsData?.counts?.active ?? activeListings.length;
-  const soldCount = listingsData?.counts?.sold ?? soldListings.length;
-  const inactiveCount = listingsData?.counts?.inactive ?? inactiveListings.length;
+  const counts = listingsData?.counts;
+  const sections: { id: Section; count: number }[] = [
+    { id: "Active", count: counts?.active ?? 0 },
+    { id: "Sold", count: counts?.sold ?? 0 },
+    { id: "Inactive", count: counts?.inactive ?? 0 },
+    { id: "Draft", count: counts?.draft ?? 0 },
+  ];
 
   return (
     <div className="min-h-screen mt-10 p-4">
@@ -81,14 +65,6 @@ const SellerDashboardTable = () => {
             </div>
           </div>
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="p-8 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#C9A227]"></div>
-              <p className="mt-2 text-gray-600">Loading listings...</p>
-            </div>
-          )}
-
           {/* Error State */}
           {error && (
             <div className="p-8 text-center">
@@ -97,30 +73,20 @@ const SellerDashboardTable = () => {
           )}
 
           {/* Accordion Sections */}
-          {!isLoading && !error && (
+          {!error && (
             <div className="divide-y divide-gray-200">
-
-              <AccordionSection
-                title={`Active (${activeCount})`}
-                isOpen={activeTab === "Active"}
-                onToggle={() => setActiveTab(activeTab === "Active" ? null : "Active")}
-                listings={activeListings}
-              />
-
-              <AccordionSection
-                title={`Sold (${soldCount})`}
-                isOpen={activeTab === "Sold"}
-                onToggle={() => setActiveTab(activeTab === "Sold" ? null : "Sold")}
-                listings={soldListings}
-              />
-
-              <AccordionSection
-                title={`Inactive (${inactiveCount})`}
-                isOpen={activeTab === "Inactive"}
-                onToggle={() => setActiveTab(activeTab === "Inactive" ? null : "Inactive")}
-                listings={inactiveListings}
-              />
-
+              {sections.map((section) => (
+                <AccordionSection
+                  key={section.id}
+                  title={`${section.id} (${section.count})`}
+                  isOpen={openSection === section.id}
+                  onToggle={() => setOpenSection(openSection === section.id ? null : section.id)}
+                  listings={openSection === section.id && !isLoading ? listings : []}
+                />
+              ))}
+              {isLoading && openSection && (
+                <div className="p-4 text-center text-sm text-gray-500">Loading listings...</div>
+              )}
             </div>
           )}
         </div>

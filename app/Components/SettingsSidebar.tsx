@@ -1,20 +1,29 @@
 "use client"
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useAuthStore } from '@/app/stores/AuthStore';
 import { ChevronLeft, User, Shield, CreditCard, HelpCircle, FileText, UserX, LogOut } from 'lucide-react';
 
 interface SettingsSidebarProps {
     onClose?: () => void;
 }
 
-const SettingsSidebar: React.FC<SettingsSidebarProps> = ({ onClose }) => {
+const SettingsSidebar: React.FC<SettingsSidebarProps> = () => {
     const router = useRouter();
     const pathname = usePathname();
+    const logout = useAuthStore((s) => s.logout);
+    const [loggingOut, setLoggingOut] = useState(false);
 
-    const handleLogout = () => {
-        // TODO: Implement logout functionality
-        router.push('/signin');
+    const handleLogout = async () => {
+        if (loggingOut) return;
+        setLoggingOut(true);
+        try {
+            // Revokes the refresh token, clears localStorage and redirects to /signin.
+            await logout();
+        } finally {
+            setLoggingOut(false);
+        }
     };
 
     const settingsLinks = [
@@ -88,10 +97,11 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({ onClose }) => {
                 <div className="pt-4 border-t border-[#ececec]">
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                        disabled={loggingOut}
+                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                     >
                         <LogOut className="w-5 h-5" />
-                        <span className="text-sm font-medium">Logout</span>
+                        <span className="text-sm font-medium">{loggingOut ? 'Logging out...' : 'Logout'}</span>
                     </button>
                 </div>
             </div>

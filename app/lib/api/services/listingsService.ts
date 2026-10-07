@@ -28,7 +28,8 @@ export interface ListingDetail {
     description: string;
     images: string[];
     status: 'draft' | 'active' | 'inactive' | 'suspended' | 'sold';
-    listedOn: string;
+    /** Null until the listing is published. */
+    listedOn: string | null;
     updatedAt: string;
     bidsCount: number;
     viewsCount: number;
@@ -41,6 +42,7 @@ export interface ListingsResponse {
         page: number;
         limit: number;
         pages: number;
+        totalPages?: number;
     };
     counts: {
         active: number;
@@ -65,7 +67,7 @@ export interface CreateListingData {
     priceUnit?: WeightUnit | 'unit';
     location: string;
     description?: string;
-    additional_notes?: string;
+    additionalNotes?: string;
     images: string[];
 }
 
@@ -91,6 +93,16 @@ const listingsService = {
     // Get listing by ID
     async getListingById(id: string): Promise<ListingDetail> {
         const response = await apiClient.get<ListingDetail>(`/seller/listings/${id}`);
+        return response.data;
+    },
+
+    // Upload listing photos (multipart `images`, up to 10 per request)
+    async uploadImages(files: File[]): Promise<{ urls: string[] }> {
+        const formData = new FormData();
+        files.forEach((file) => formData.append('images', file));
+        const response = await apiClient.post<{ urls: string[] }>('/seller/listings/images', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
         return response.data;
     },
 

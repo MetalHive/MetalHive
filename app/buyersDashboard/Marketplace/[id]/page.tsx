@@ -1,12 +1,24 @@
 'use client'
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ChevronLeft, Star, MapPin, Package, Scale } from 'lucide-react';
+import { ChevronLeft, MapPin, Package, Scale } from 'lucide-react';
 import ProductCard from '../../components/marketPlaceCard';
 import Link from 'next/link';
 import { useMarketplaceListing, useSimilarListings, useSaveListing } from '../../../hooks/useBuyer';
+import { getErrorMessage } from '@/app/lib/api/client';
+import { formatDate } from '@/app/lib/utils/formatters';
 
 import { useToast } from '@/app/Components/Toast';
+
+const EXISTING_BID_LABEL: Record<string, string> = {
+  pending: 'Awaiting seller',
+  countered: 'Seller countered',
+  accepted: 'Accepted',
+  rejected: 'Declined',
+  withdrawn: 'Withdrawn',
+  expired: 'Expired',
+};
+
 const ScrapMetalListing = () => {
   const toast = useToast();
   const params = useParams();
@@ -23,7 +35,7 @@ const ScrapMetalListing = () => {
     if (listingId) {
       saveListing.mutate(listingId, {
         onSuccess: () => toast.success('Listing saved!'),
-        onError: () => toast.error('Failed to save listing'),
+        onError: (err) => toast.error(getErrorMessage(err, 'Failed to save listing')),
       });
     }
   };
@@ -50,7 +62,8 @@ const ScrapMetalListing = () => {
     );
   }
 
-  const images = listing.images?.length > 0 ? listing.images : ['/bid1.png'];
+  const images = listing.images?.filter(Boolean).length > 0 ? listing.images.filter(Boolean) : ['/bid1.png'];
+  const existingBid = listing.existingBid;
 
   return (
     <div className="">
@@ -73,8 +86,9 @@ const ScrapMetalListing = () => {
 
             {/* Image Carousel */}
             <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={images[currentImageIndex]}
+                src={images[currentImageIndex] || '/bid1.png'}
                 alt={listing.materialName}
                 className="w-full h-80 object-cover"
               />
@@ -100,7 +114,7 @@ const ScrapMetalListing = () => {
             <div className='mt-7'>
               <h1 className="text-2xl font-bold mb-1">{listing.materialName}</h1>
               <p className="text-sm text-gray-500 mb-4">
-                Listing created on {new Date(listing.createdAt).toLocaleDateString()}
+                Listing created on {formatDate(listing.createdAt)}
               </p>
 
               {/* Description Section */}
@@ -117,7 +131,10 @@ const ScrapMetalListing = () => {
                   <Package className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-xs text-gray-500">Price</p>
-                    <p className="text-sm font-semibold">${Number(listing.basePrice || 0).toFixed(2)}</p>
+                    <p className="text-sm font-semibold">
+                      ${Number(listing.basePrice || 0).toFixed(2)}
+                      {listing.priceUnit && ` / ${listing.priceUnit}`}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
@@ -145,21 +162,13 @@ const ScrapMetalListing = () => {
               <p className="text-sm text-gray-600 mb-1">{listing.seller?.name || listing.sellerName}</p>
               <h3 className="text-xl font-semibold mb-2">{listing.materialName}</h3>
 
-              {/* Rating */}
-              <div className="flex items-center gap-1 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-4 h-4 ${i < (listing.seller?.rating || 5)
-                      ? 'fill-black text-black'
-                      : 'fill-gray-200 text-gray-200'
-                      }`}
-                  />
-                ))}
-              </div>
-
               {/* Price */}
-              <p className="text-3xl font-bold mb-2">${Number(listing.basePrice || 0).toFixed(2)}</p>
+              <p className="text-3xl font-bold mb-2">
+                ${Number(listing.basePrice || 0).toFixed(2)}
+                {listing.priceUnit && (
+                  <span className="text-base font-normal text-gray-500"> / {listing.priceUnit}</span>
+                )}
+              </p>
               <p className="text-sm text-[#C9A227] flex items-center gap-1">
                 <span className="text-[#C9A227]">⚠</span>
                 Final price depends on your bid.
@@ -184,14 +193,33 @@ const ScrapMetalListing = () => {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              <Link
-                href={`/buyersDashboard/Marketplace/Placebid?listingId=${listingId}`}
-                className="block"
-              >
-                <button className="w-full bg-[#C9A227] hover:bg-yellow-600 text-white font-semibold py-3 rounded-lg transition-colors">
+              {existingBid ? (
+                <>
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+                    <p className="text-gray-600">You already have a bid on this listing</p>
+                    <p className="font-semibold text-gray-900 mt-0.5">
+                      ${Number(existingBid.offerPrice || 0).toFixed(2)}
+                      {existingBid.offerPriceUnit ? ` / ${existingBid.offerPriceUnit}` : ''}
+                      <span className="ml-2 text-xs font-medium text-gray-500">
+                        {EXISTING_BID_LABEL[existingBid.status] || existingBid.status}
+                      </span>
+                    </p>
+                  </div>
+                  <Link
+                    href={`/buyersDashboard/bids/${existingBid.id}`}
+                    className="block w-full text-center bg-[#C9A227] hover:bg-yellow-600 text-white font-semibold py-3 rounded-lg transition-colors"
+                  >
+                    View your bid
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href={`/buyersDashboard/Marketplace/Placebid?listingId=${listingId}`}
+                  className="block w-full text-center bg-[#C9A227] hover:bg-yellow-600 text-white font-semibold py-3 rounded-lg transition-colors"
+                >
                   Place Bid
-                </button>
-              </Link>
+                </Link>
+              )}
               <button
                 onClick={handleSaveListing}
                 disabled={saveListing.isPending}
@@ -209,7 +237,7 @@ const ScrapMetalListing = () => {
             <div className='mb-8'>
               <h2 className='font-semibold text-2xl'>Similar Listings</h2>
               <p className='text-[#737780]'>
-                View listings similar to "{listing.materialName}"
+                View listings similar to &quot;{listing.materialName}&quot;
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -224,7 +252,7 @@ const ScrapMetalListing = () => {
                     title={item.materialName}
                     price={`$${item.basePrice} / ${item.priceUnit}`}
                     location={item.location}
-                    timeAgo={new Date(item.createdAt).toLocaleDateString()}
+                    timeAgo={formatDate(item.createdAt)}
                     description={item.description}
                     images={item.images}
                   />

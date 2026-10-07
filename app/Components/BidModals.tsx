@@ -40,7 +40,7 @@ export const AcceptBidModal: React.FC<AcceptBidModalProps> = ({
                 {/* Content */}
                 <h2 className="text-2xl font-semibold text-[#17181a] mb-4">Accept This Bid?</h2>
                 <p className="text-sm text-[#737780] mb-8">
-                    You're about to accept an offer for this listing.
+                    You&apos;re about to accept an offer for this listing.
                 </p>
 
                 {/* Details */}
@@ -218,7 +218,7 @@ export const DeclineBidModal: React.FC<DeclineBidModalProps> = ({
 
                 <p className="text-sm text-[#737780] mb-6">
                     Are you sure you want to decline this offer?<br />
-                    The buyer will be notified and this action can't be undone.
+                    The buyer will be notified and this action can&apos;t be undone.
                 </p>
 
                 {/* Reason Input */}

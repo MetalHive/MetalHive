@@ -1,54 +1,66 @@
 "use client"
 
-import React, { useState } from 'react';
-import { SettingsCard, TextInput, SettingsButton, SettingsSection } from '../../../Components/SettingsComponents';
-import { Upload, FileText, Briefcase } from 'lucide-react';
+import React from 'react';
+import Link from 'next/link';
+import { SettingsCard, SettingsSection } from '../../../Components/SettingsComponents';
+import { FileText, Briefcase, CheckCircle2, Clock, XCircle, LifeBuoy } from 'lucide-react';
+import { useBuyerProfile } from '@/app/hooks/useBuyer';
 
-import { useToast } from '@/app/Components/Toast';
+type Status = 'pending' | 'verified' | 'rejected';
+
+const STATUS_META: Record<Status, {
+    label: string;
+    description: string;
+    icon: React.ReactNode;
+    badge: string;
+}> = {
+    pending: {
+        label: 'Verification in progress',
+        description:
+            'Our team is reviewing the documents you submitted during registration. Bidding unlocks automatically once your company is verified.',
+        icon: <Clock className="w-6 h-6 text-amber-600" />,
+        badge: 'bg-amber-50 text-amber-800 border-amber-200',
+    },
+    verified: {
+        label: 'Verified',
+        description: 'Your company has been verified. You can place bids on any marketplace listing.',
+        icon: <CheckCircle2 className="w-6 h-6 text-green-600" />,
+        badge: 'bg-green-50 text-green-800 border-green-200',
+    },
+    rejected: {
+        label: 'Verification rejected',
+        description:
+            'The documents you submitted could not be verified. Please contact support so we can help you resolve this.',
+        icon: <XCircle className="w-6 h-6 text-red-600" />,
+        badge: 'bg-red-50 text-red-800 border-red-200',
+    },
+};
+
+const fileNameFromUrl = (url: string): string => {
+    try {
+        const path = new URL(url, 'http://placeholder.local').pathname;
+        const name = decodeURIComponent(path.split('/').filter(Boolean).pop() || '');
+        return name || url;
+    } catch {
+        return url;
+    }
+};
+
 const VerificationPage = () => {
-    const toast = useToast();
-    const [formData, setFormData] = useState({
-        businessName: '',
-        registrationNumber: '',
-        taxId: '',
-        address: '',
-    });
+    const { data: profile, isLoading, error } = useBuyerProfile();
 
-    const [files, setFiles] = useState<{
-        license: File | null;
-        idProof: File | null;
-    }>({
-        license: null,
-        idProof: null,
-    });
+    if (isLoading) {
+        return (
+            <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9A227]"></div>
+            </div>
+        );
+    }
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'license' | 'idProof') => {
-        if (e.target.files && e.target.files[0]) {
-            setFiles(prev => ({
-                ...prev,
-                [type]: e.target.files![0]
-            }));
-        }
-    };
-
-    const handleSubmit = async () => {
-        setIsSubmitting(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        console.log('Verification data:', { ...formData, ...files });
-        toast.success('Verification request submitted successfully! We will review your documents shortly.');
-        setIsSubmitting(false);
-    };
+    const status: Status =
+        profile?.verificationStatus ?? (profile?.isVerified ? 'verified' : 'pending');
+    const meta = STATUS_META[status];
+    const documentUrl = profile?.verificationDocument || null;
 
     return (
         <main className="p-10 mt-16 lg:mt-0 mx-auto max-w-4xl">
@@ -59,136 +71,100 @@ const VerificationPage = () => {
                         Business Verification
                     </h1>
                     <p className="text-sm text-[#737780]">
-                        Verify your business to unlock higher transaction limits and premium features.
+                        Verification confirms your company is a legitimate buyer. It is required before you can bid.
                     </p>
                 </div>
 
+                {error && (
+                    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        We could not load your verification status. Please refresh the page.
+                    </div>
+                )}
+
                 <div className="space-y-8">
-                    {/* Business Details Section */}
-                    <SettingsSection title="Business Details" description="Provide your official business information.">
+                    {/* Status */}
+                    <SettingsSection title="Status" description="Where your verification currently stands.">
                         <SettingsCard>
-                            <div className="space-y-4">
-                                <TextInput
-                                    label="Registered Business Name"
-                                    name="businessName"
-                                    value={formData.businessName}
-                                    onChange={handleInputChange}
-                                    placeholder="e.g. Acme Corp Ltd."
-                                />
-                                <TextInput
-                                    label="Registration Number"
-                                    name="registrationNumber"
-                                    value={formData.registrationNumber}
-                                    onChange={handleInputChange}
-                                    placeholder="Business Registration No."
-                                />
-                                <TextInput
-                                    label="Tax ID / VAT Number"
-                                    name="taxId"
-                                    value={formData.taxId}
-                                    onChange={handleInputChange}
-                                    placeholder="Tax ID"
-                                />
-                                <TextInput
-                                    label="Business Address"
-                                    name="address"
-                                    value={formData.address}
-                                    onChange={handleInputChange}
-                                    placeholder="123 Business St, City, Country"
-                                />
+                            <div className="flex items-start gap-4">
+                                <div className="shrink-0 w-12 h-12 rounded-full bg-[#f5f5f5] flex items-center justify-center">
+                                    {meta.icon}
+                                </div>
+                                <div className="flex-1">
+                                    <span className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-semibold ${meta.badge}`}>
+                                        {meta.label}
+                                    </span>
+                                    <p className="text-sm text-[#737780] mt-3 leading-relaxed">{meta.description}</p>
+                                </div>
                             </div>
                         </SettingsCard>
                     </SettingsSection>
 
-                    {/* Document Upload Section */}
-                    <SettingsSection title="Documents" description="Upload official documents for verification.">
+                    {/* Company details on file */}
+                    <SettingsSection title="Company on file" description="The business details we are verifying.">
                         <SettingsCard>
-                            <div className="space-y-6">
-                                {/* Business License Upload */}
+                            <div className="flex items-start gap-3">
+                                <Briefcase className="w-5 h-5 text-[#737780] mt-0.5" />
                                 <div>
-                                    <label className="block text-sm font-medium text-[#17181a] mb-2">
-                                        Business License / Incorporation Certificate
-                                    </label>
-                                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-[#ececec] border-dashed rounded-lg hover:bg-gray-50 transition-colors relative">
-                                        <div className="space-y-1 text-center">
-                                            {files.license ? (
-                                                <div className="flex flex-col items-center">
-                                                    <FileText className="mx-auto h-12 w-12 text-[#C9A227]" />
-                                                    <p className="text-sm text-[#17181a] font-medium mt-2">{files.license.name}</p>
-                                                    <p className="text-xs text-gray-500">{(files.license.size / 1024).toFixed(2)} KB</p>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <Briefcase className="mx-auto h-12 w-12 text-gray-400" />
-                                                    <div className="flex text-sm text-gray-600 justify-center">
-                                                        <span className="relative cursor-pointer bg-white rounded-md font-medium text-[#C9A227] hover:text-[#b08f1f]">
-                                                            Upload a file
-                                                        </span>
-                                                        <p className="pl-1">or drag and drop</p>
-                                                    </div>
-                                                    <p className="text-xs text-gray-500">
-                                                        PDF, PNG, JPG up to 10MB
-                                                    </p>
-                                                </>
-                                            )}
-                                            <input
-                                                type="file"
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                accept=".pdf,.png,.jpg,.jpeg"
-                                                onChange={(e) => handleFileChange(e, 'license')}
-                                            />
-                                        </div>
-                                    </div>
+                                    <p className="text-sm font-semibold text-[#17181a]">
+                                        {profile?.companyName || 'Company name not provided'}
+                                    </p>
+                                    <p className="text-sm text-[#737780]">{profile?.email}</p>
+                                    {profile?.fullName && (
+                                        <p className="text-sm text-[#737780]">Contact: {profile.fullName}</p>
+                                    )}
                                 </div>
-
-                                {/* ID Proof Upload */}
-                                <div>
-                                    <label className="block text-sm font-medium text-[#17181a] mb-2">
-                                        Director / Admin ID Proof
-                                    </label>
-                                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-[#ececec] border-dashed rounded-lg hover:bg-gray-50 transition-colors relative">
-                                        <div className="space-y-1 text-center">
-                                            {files.idProof ? (
-                                                <div className="flex flex-col items-center">
-                                                    <FileText className="mx-auto h-12 w-12 text-[#C9A227]" />
-                                                    <p className="text-sm text-[#17181a] font-medium mt-2">{files.idProof.name}</p>
-                                                    <p className="text-xs text-gray-500">{(files.idProof.size / 1024).toFixed(2)} KB</p>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                                                    <div className="flex text-sm text-gray-600 justify-center">
-                                                        <span className="relative cursor-pointer bg-white rounded-md font-medium text-[#C9A227] hover:text-[#b08f1f]">
-                                                            Upload a file
-                                                        </span>
-                                                        <p className="pl-1">or drag and drop</p>
-                                                    </div>
-                                                    <p className="text-xs text-gray-500">
-                                                        PDF, PNG, JPG up to 10MB
-                                                    </p>
-                                                </>
-                                            )}
-                                            <input
-                                                type="file"
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                accept=".pdf,.png,.jpg,.jpeg"
-                                                onChange={(e) => handleFileChange(e, 'idProof')}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <SettingsButton
-                                    onClick={handleSubmit}
-                                    isLoading={isSubmitting}
-                                    disabled={!formData.businessName || !files.license}
-                                    className="w-full"
-                                >
-                                    Submit for Verification
-                                </SettingsButton>
                             </div>
                         </SettingsCard>
                     </SettingsSection>
+
+                    {/* Submitted document */}
+                    <SettingsSection title="Submitted document" description="Uploaded when you created your account.">
+                        <SettingsCard>
+                            {documentUrl ? (
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <FileText className="w-5 h-5 text-[#C9A227] shrink-0" />
+                                        <span className="text-sm font-medium text-[#17181a] truncate">
+                                            {fileNameFromUrl(documentUrl)}
+                                        </span>
+                                    </div>
+                                    <a
+                                        href={documentUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="shrink-0 text-sm font-medium text-[#C9A227] hover:underline"
+                                    >
+                                        View
+                                    </a>
+                                </div>
+                            ) : (
+                                <div className="flex items-start gap-3">
+                                    <FileText className="w-5 h-5 text-[#999999] mt-0.5" />
+                                    <p className="text-sm text-[#737780]">
+                                        No verification document is on file. Contact support to submit one.
+                                    </p>
+                                </div>
+                            )}
+                        </SettingsCard>
+                    </SettingsSection>
+
+                    {/* Support */}
+                    <SettingsCard className="bg-[#fafafa]">
+                        <div className="flex items-start gap-3">
+                            <LifeBuoy className="w-5 h-5 text-[#737780] mt-0.5" />
+                            <div className="text-sm text-[#737780] leading-relaxed">
+                                <p className="font-medium text-[#17181a] mb-1">Need to update your documents?</p>
+                                <p>
+                                    Documents cannot be changed from this page. If anything is incorrect, or your
+                                    verification was rejected, please{' '}
+                                    <Link href="/buyersDashboard/settings/support" className="text-[#C9A227] font-medium hover:underline">
+                                        contact support
+                                    </Link>{' '}
+                                    and our team will help you.
+                                </p>
+                            </div>
+                        </div>
+                    </SettingsCard>
                 </div>
             </div>
         </main>

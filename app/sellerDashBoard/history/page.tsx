@@ -1,13 +1,17 @@
 "use client"
 
+import { useState } from "react"
 import SideBar from "../../Components/SideBar"
 import { sellerSidebarLinks } from "../../lib/sidebarConfig"
 import { useSalesHistory } from "../../hooks/useApi"
 import { formatDate, formatCurrency } from "../../lib/utils/formatters"
+import Pagination from "@/app/Components/Pagination"
 
 const HistoryPage = () => {
+    const [page, setPage] = useState(1)
+
     // Fetch sales history from API
-    const { data, isLoading, error } = useSalesHistory()
+    const { data, isLoading, error } = useSalesHistory({ page })
 
     return (
         <div className="flex min-h-screen bg-[#fafafa]">
@@ -50,21 +54,23 @@ const HistoryPage = () => {
                                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                                             {/* Left Side - Product Info */}
                                             <div className="flex gap-4 flex-1">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img
-                                                    src={sale.listing.image || '/bid1.png'}
-                                                    alt={sale.listing.name}
+                                                    src={sale.listing?.image || '/bid1.png'}
+                                                    alt={sale.listing?.name || 'Listing'}
                                                     className="w-24 h-24 rounded-xl object-cover border border-[#ececec]"
                                                 />
                                                 <div className="flex-1">
                                                     <h3 className="text-lg font-semibold text-[#17181a] mb-2">
-                                                        {sale.listing.name}
+                                                        {sale.listing?.name || 'Listing removed'}
                                                     </h3>
                                                     <div className="flex flex-wrap gap-4 text-sm text-[#737780]">
                                                         <div className="flex items-center gap-2">
                                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                                             </svg>
-                                                            <span className="font-medium">{sale.quantity} kg</span>
+                                                            {/* quantity already carries its unit (e.g. "500kg") */}
+                                                            <span className="font-medium">{sale.quantity}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -72,9 +78,15 @@ const HistoryPage = () => {
                                                             </svg>
                                                             <span>{formatDate(sale.soldAt)}</span>
                                                         </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span>
+                                                                {formatCurrency(Number(sale.finalPrice || 0))}
+                                                                {sale.priceUnit ? ` / ${sale.priceUnit}` : ''}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                     <p className="text-sm text-[#999999] mt-2">
-                                                        <span className="text-[#737780] font-medium">Buyer:</span> {sale.buyer.name}
+                                                        <span className="text-[#737780] font-medium">Buyer:</span> {sale.buyer?.name || '—'}
                                                     </p>
                                                 </div>
                                             </div>
@@ -84,7 +96,7 @@ const HistoryPage = () => {
                                                 <div className="text-right">
                                                     <p className="text-sm text-[#737780] mb-1">Sale Amount</p>
                                                     <p className="text-3xl font-bold text-[#C9A227]">
-                                                        {formatCurrency(sale.finalPrice)}
+                                                        {formatCurrency(Number(sale.totalAmount || 0))}
                                                     </p>
                                                 </div>
                                                 <div className="flex items-center gap-3">
@@ -123,6 +135,8 @@ const HistoryPage = () => {
                             </div>
                         )}
 
+                        <Pagination page={page} pagination={data?.pagination} onPageChange={setPage} />
+
                         {/* Summary Stats */}
                         {data?.summary && data.sales && data.sales.length > 0 && (
                             <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -136,14 +150,14 @@ const HistoryPage = () => {
                                 <div className="bg-white rounded-2xl border border-[#ececec] p-6 hover:shadow-md transition-all">
                                     <p className="text-sm text-[#737780] mb-2 font-medium">Total Revenue</p>
                                     <p className="text-4xl font-bold text-[#C9A227]">
-                                        {formatCurrency(data.summary.totalRevenue)}
+                                        {formatCurrency(Number(data.summary.totalRevenue || 0))}
                                     </p>
                                     <p className="text-sm text-[#999999] mt-2">Total earnings</p>
                                 </div>
                                 <div className="bg-white rounded-2xl border border-[#ececec] p-6 hover:shadow-md transition-all">
                                     <p className="text-sm text-[#737780] mb-2 font-medium">Average Sale</p>
                                     <p className="text-4xl font-bold text-[#17181a]">
-                                        {formatCurrency(data.summary.totalSales > 0 ? data.summary.totalRevenue / data.summary.totalSales : 0)}
+                                        {formatCurrency(data.summary.totalSales > 0 ? Number(data.summary.totalRevenue || 0) / data.summary.totalSales : 0)}
                                     </p>
                                     <p className="text-sm text-[#999999] mt-2">Per transaction</p>
                                 </div>
