@@ -12,12 +12,16 @@ import {
   PrimaryButton,
   SelectInput,
   TextInput,
+  withCountryCode,
 } from "@/app/Components/AuthFormUI"
 
 interface Form2Props {
   onComplete?: () => void
   onBack?: () => void
 }
+
+// The platform only serves Canada for now.
+const COUNTRIES = ["Canada"]
 
 const PROVINCES = [
   "Alberta",
@@ -48,7 +52,7 @@ const Form2: React.FC<Form2Props> = ({ onBack }) => {
     city: "",
     province: "",
     postalCode: "",
-    country: "",
+    country: "Canada",
   })
 
   const handleAddressChange = (
@@ -118,7 +122,7 @@ const Form2: React.FC<Form2Props> = ({ onBack }) => {
       await registerSeller(registrationData)
       // Registration has no name/phone fields; fill the profile right after
       // (best-effort, non-blocking).
-      void authService.completeProfile({ name: formData.fullName, phone: formData.phone })
+      void authService.completeProfile({ name: formData.fullName, phone: withCountryCode(formData.phone) })
       router.push("/sellerDashBoard")
     } catch {
       // The store exposes the backend message via `authError`, rendered below.
@@ -216,15 +220,19 @@ const Form2: React.FC<Form2Props> = ({ onBack }) => {
                 disabled={isLoading}
               />
               <div className="md:col-span-2">
-                <TextInput
-                  type="text"
+                <SelectInput
                   name="country"
-                  placeholder="Country"
                   value={addressDetails.country}
                   onChange={handleAddressChange}
                   hasError={!!errors.country}
                   disabled={isLoading}
-                />
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </SelectInput>
               </div>
             </div>
           </FieldCard>

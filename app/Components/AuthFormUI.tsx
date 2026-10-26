@@ -142,6 +142,15 @@ export const PasswordInput = ({ hasError, className = "", ...props }: InputProps
   )
 }
 
+/** Canadian numbers only: keep the 10 national digits the user types. */
+export const nationalDigits = (value: string) => value.replace(/\D/g, "").slice(0, 10)
+
+/** "+1" plus the national digits, which is how the phone is stored and sent. */
+export const withCountryCode = (digits: string) => {
+  const d = nationalDigits(digits || "")
+  return d ? `+1${d}` : ""
+}
+
 export const PhoneInput = ({ hasError, className = "", ...props }: InputProps) => (
   <div
     className={`flex h-11 w-full items-center gap-2 rounded-xl border bg-white px-3 transition focus-within:border-[#C9A227] ${

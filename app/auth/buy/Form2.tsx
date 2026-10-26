@@ -12,10 +12,17 @@ import {
   BackButton,
   FieldCard,
   FileUploadInput,
+  PhoneInput,
   PrimaryButton,
+  SelectInput,
   TextInput,
   VerificationModal,
+  nationalDigits,
+  withCountryCode,
 } from "@/app/Components/AuthFormUI"
+
+// The platform only serves Canada for now.
+const COUNTRIES = ["Canada"]
 
 interface Form2Props {
   onComplete?: () => void
@@ -42,10 +49,12 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
     city: "",
     province: "",
     postalCode: "",
-    country: "",
+    country: "Canada",
   })
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddressChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target
     setAddressDetails((prev) => ({ ...prev, [name]: value }))
   }
@@ -63,7 +72,7 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
     } else if (name === "contactPersonPosition") {
       updateBuyerData({ contactPerson: { ...buyerData.contactPerson, position: value } })
     } else if (name === "contactPersonPhone") {
-      updateBuyerData({ contactPerson: { ...buyerData.contactPerson, phone: value } })
+      updateBuyerData({ contactPerson: { ...buyerData.contactPerson, phone: nationalDigits(value) } })
     } else {
       updateBuyerData({ [name]: value })
     }
@@ -120,7 +129,7 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
         company_address: fullAddress,
         contact_person_name: buyerData.contactPerson.name,
         contact_person_position: buyerData.contactPerson.position,
-        contact_person_phone: buyerData.contactPerson.phone,
+        contact_person_phone: withCountryCode(buyerData.contactPerson.phone),
         verification_document: buyerData.verificationDocument || undefined,
       })
 
@@ -128,7 +137,7 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
       // (best-effort, non-blocking).
       void authService.completeProfile({
         name: buyerData.fullName || buyerData.contactPerson.name,
-        phone: buyerData.phone || buyerData.contactPerson.phone,
+        phone: withCountryCode(buyerData.phone || buyerData.contactPerson.phone),
       })
 
       setShowVerification(true)
@@ -228,15 +237,19 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
                 disabled={isSubmitting}
               />
               <div className="md:col-span-2">
-                <TextInput
-                  type="text"
+                <SelectInput
                   name="country"
-                  placeholder="Country"
                   value={addressDetails.country}
                   onChange={handleAddressChange}
                   hasError={!!errors.country}
                   disabled={isSubmitting}
-                />
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </SelectInput>
               </div>
             </div>
           </FieldCard>
@@ -273,8 +286,9 @@ const Form2: React.FC<Form2Props> = ({ onComplete, onBack }) => {
                 hasError={!!errors.contactPersonPosition}
                 disabled={isSubmitting}
               />
-              <TextInput
+              <PhoneInput
                 type="tel"
+                inputMode="numeric"
                 name="contactPersonPhone"
                 placeholder="Phone number"
                 value={buyerData.contactPerson.phone}

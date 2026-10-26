@@ -10,6 +10,7 @@ import {
   PhoneInput,
   PrimaryButton,
   TextInput,
+  nationalDigits,
 } from "./AuthFormUI"
 
 /**
@@ -49,6 +50,9 @@ const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ data, onChange, o
     required.forEach(({ key, label }) => {
       if (!data[key]) newErrors[key] = `${label} is required`
     })
+    if (data.phone && nationalDigits(data.phone).length !== 10) {
+      newErrors.phone = "Enter the 10-digit number after +1"
+    }
 
     const { password, confirmPassword } = data
     if (password) {
@@ -126,7 +130,7 @@ const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ data, onChange, o
               inputMode="numeric"
               placeholder="(662) 241-4991"
               value={data.phone}
-              onChange={(e) => onChange({ phone: e.target.value })}
+              onChange={(e) => onChange({ phone: nationalDigits(e.target.value) })}
               hasError={!!errors.phone}
             />
           </FieldCard>
