@@ -55,6 +55,7 @@ export interface MarketplaceListing {
     pricePerKg?: string;
     totalValue?: string;
     productCode?: string;
+    status?: string;
 }
 
 export interface MarketplaceListingsResponse {
@@ -82,6 +83,8 @@ export interface ListingDetail extends MarketplaceListing {
     weight?: string;
     /** The current buyer's open bid on this listing, or null. */
     existingBid?: ExistingBid | null;
+    /** Whether the current buyer has bookmarked this listing. */
+    isSaved?: boolean;
 }
 
 export interface SavedListing {
@@ -280,8 +283,11 @@ const buyerService = {
 
     // ========== SAVED LISTINGS ==========
     async getSavedListings(): Promise<SavedListing[]> {
-        const response = await apiClient.get('/buyer/saved-listings/');
-        return response.data?.data || response.data || [];
+        // Paginated envelope keyed by the model name: data.savedlistings.
+        const response = await apiClient.get<{ savedlistings?: SavedListing[] } | SavedListing[]>('/buyer/saved-listings/?limit=100');
+        const data = response.data;
+        if (Array.isArray(data)) return data;
+        return data?.savedlistings || [];
     },
 
     async saveListing(listingId: string): Promise<{ message: string }> {

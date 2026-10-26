@@ -18,7 +18,7 @@ export default function CompanyOverview() {
     { label: "Active Bids", value: stats?.activeBids ?? 0 },
     { label: "Pending Bids", value: stats?.pendingBids ?? 0 },
     { label: "Accepted Bids", value: stats?.acceptedBids ?? 0 },
-    { label: "Saved Listings", value: stats?.savedListings ?? 0 },
+    { label: "Saved Listings", value: stats?.savedListings ?? 0, href: "/buyersDashboard/saved" },
   ];
 
   return (
@@ -114,19 +114,31 @@ export default function CompanyOverview() {
       <div>
         <h2 className="font-semibold text-lg">Statistics</h2>
         <div className=" mt-4 rounded-lg border-y border-y-[#DDDDDD] grid grid-cols-2 md:grid-cols-4">
-          {statsData.map((stat, index) => (
-            <div
-              key={index}
-              className="flex flex-col px-5 justify-center p-8 border-l-6 border-l-[#DDDDDD]"
-            >
-              {statsLoading ? (
-                <div className="h-6 w-12 bg-gray-200 rounded animate-pulse" />
-              ) : (
-                <span className="text-lg font-semibold">{stat.value}</span>
-              )}
-              <span className="text-sm text-gray-500">{stat.label}</span>
-            </div>
-          ))}
+          {statsData.map((stat, index) => {
+            const content = (
+              <>
+                {statsLoading ? (
+                  <div className="h-6 w-12 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  <span className="text-lg font-semibold">{stat.value}</span>
+                )}
+                <span className="text-sm text-gray-500">
+                  {stat.label}
+                  {stat.href && <span className="ml-1 text-[#C9A227]">→</span>}
+                </span>
+              </>
+            );
+            const className = "flex flex-col px-5 justify-center p-8 border-l-6 border-l-[#DDDDDD]";
+            return stat.href ? (
+              <Link key={index} href={stat.href} className={`${className} hover:bg-gray-50 transition-colors`}>
+                {content}
+              </Link>
+            ) : (
+              <div key={index} className={className}>
+                {content}
+              </div>
+            );
+          })}
         </div>
       </div>
 

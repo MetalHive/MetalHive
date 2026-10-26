@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { Home, Grid, Wallet } from 'lucide-react'
+import { Home, Grid, Wallet, Bookmark } from 'lucide-react'
 import { BsShop } from "react-icons/bs";
 import { MdAnalytics } from "react-icons/md";
 import { IoSettingsOutline } from "react-icons/io5";
@@ -55,6 +55,11 @@ export const buyerSidebarLinks: SidebarLink[] = [
     label: 'Marketplace',
     href: '/buyersDashboard/Marketplace',
     icon: BsShop,
+  },
+  {
+    label: 'Saved',
+    href: '/buyersDashboard/saved',
+    icon: Bookmark,
   },
   {
     label: 'Bids',

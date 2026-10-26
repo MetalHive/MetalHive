@@ -4,7 +4,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft, MapPin, Package, Scale } from 'lucide-react';
 import ProductCard from '../../components/marketPlaceCard';
 import Link from 'next/link';
-import { useMarketplaceListing, useSimilarListings, useSaveListing } from '../../../hooks/useBuyer';
+import { useMarketplaceListing, useSimilarListings, useSaveListing, useUnsaveListing } from '../../../hooks/useBuyer';
+import { useQueryClient } from '@tanstack/react-query';
+import { Bookmark } from 'lucide-react';
 import { getErrorMessage } from '@/app/lib/api/client';
 import { formatDate } from '@/app/lib/utils/formatters';
 
@@ -28,13 +30,25 @@ const ScrapMetalListing = () => {
   const { data: listing, isLoading, error } = useMarketplaceListing(listingId);
   const { data: similarListings } = useSimilarListings(listingId);
   const saveListing = useSaveListing();
+  const unsaveListing = useUnsaveListing();
+  const queryClient = useQueryClient();
+  const isSaved = Boolean(listing?.isSaved);
+  const savePending = saveListing.isPending || unsaveListing.isPending;
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // One button toggles between saving and removing the bookmark.
   const handleSaveListing = () => {
-    if (listingId) {
+    if (!listingId) return;
+    const refresh = () => queryClient.invalidateQueries({ queryKey: ['marketplaceListing', listingId] });
+    if (isSaved) {
+      unsaveListing.mutate(listingId, {
+        onSuccess: () => { refresh(); toast.success('Removed from your saved listings.'); },
+        onError: (err) => toast.error(getErrorMessage(err, 'Failed to remove the listing')),
+      });
+    } else {
       saveListing.mutate(listingId, {
-        onSuccess: () => toast.success('Listing saved!'),
+        onSuccess: () => { refresh(); toast.success('Saved. Find it under Saved in the sidebar.'); },
         onError: (err) => toast.error(getErrorMessage(err, 'Failed to save listing')),
       });
     }
@@ -222,10 +236,16 @@ const ScrapMetalListing = () => {
               )}
               <button
                 onClick={handleSaveListing}
-                disabled={saveListing.isPending}
-                className="w-full text-gray-700 hover:bg-[#C9A227] shadow-sm shadow-[#ECECEC] font-medium py-3 hover:text-white rounded-lg transition-colors disabled:opacity-50"
+                disabled={savePending}
+                aria-pressed={isSaved}
+                className={`w-full flex items-center justify-center gap-2 font-medium py-3 rounded-lg transition-colors disabled:opacity-50 shadow-sm shadow-[#ECECEC] ${
+                  isSaved
+                    ? 'bg-[#FFF8E1] text-[#8a6d12] hover:bg-[#f3e6b8]'
+                    : 'text-gray-700 hover:bg-[#C9A227] hover:text-white'
+                }`}
               >
-                {saveListing.isPending ? 'Saving...' : 'Save Listing'}
+                <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
+                {savePending ? 'Saving...' : isSaved ? 'Saved' : 'Save Listing'}
               </button>
             </div>
           </div>
