@@ -6,6 +6,8 @@ import { Search } from 'lucide-react';
 import { useListings, useUpdateListing, usePublishListing, useDeleteListing } from '@/app/hooks/useApi';
 import { useDebouncedValue } from '@/app/hooks/useDebounce';
 import Pagination from '@/app/Components/Pagination';
+import ActionMenu from '@/app/Components/ActionMenu';
+import { Modal } from '@/app/Components/Modals';
 import { useToast } from '@/app/Components/Toast';
 import { getErrorMessage } from '@/app/lib/api/client';
 
@@ -37,7 +39,7 @@ const ListingsDashboard = () => {
   const updateListing = useUpdateListing();
   const publishListing = usePublishListing();
   const deleteListing = useDeleteListing();
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const busy = updateListing.isPending || publishListing.isPending || deleteListing.isPending;
 
   const run = async (action: () => Promise<unknown>, success: string, failure: string) => {
@@ -58,7 +60,7 @@ const ListingsDashboard = () => {
     );
   const remove = async (id: string) => {
     await run(() => deleteListing.mutateAsync(id), 'Listing deleted.', 'Could not delete the listing.');
-    setConfirmDeleteId(null);
+    setConfirmDelete(null);
   };
 
   // The API filters by status, so each tab maps 1:1 to a backend status.
@@ -148,7 +150,7 @@ const ListingsDashboard = () => {
                 <div className="col-span-1">Bids</div>
                 <div className="col-span-2">Price</div>
                 <div className="col-span-2">Status</div>
-                <div className="col-span-2">Action</div>
+                <div className="col-span-2 text-right pr-6">Actions</div>
               </div>
 
               {/* Listings */}
@@ -192,55 +194,29 @@ const ListingsDashboard = () => {
                       </span>
                     </div>
 
-                    <div className="col-span-2 flex items-center flex-wrap gap-x-3 gap-y-1 text-sm font-medium">
-                      {confirmDeleteId === listing.id ? (
-                        <>
-                          <span className="text-gray-700">Delete?</span>
-                          <button onClick={() => remove(listing.id)} disabled={busy} className="text-red-600 hover:underline disabled:opacity-50">
-                            Yes, delete
-                          </button>
-                          <button onClick={() => setConfirmDeleteId(null)} className="text-gray-500 hover:underline">
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => router.push(`/sellerDashBoard/${listing.id}`)}
-                            className="text-[#C9A227] hover:underline"
-                          >
-                            View
-                          </button>
-                          {listing.status === 'draft' && (
-                            <>
-                              <button
-                                onClick={() => router.push(`/sellerDashBoard/create-listing?draft=${listing.id}`)}
-                                className="text-gray-700 hover:underline"
-                              >
-                                Edit
-                              </button>
-                              <button onClick={() => publish(listing.id)} disabled={busy} className="text-green-700 hover:underline disabled:opacity-50">
-                                Publish
-                              </button>
-                            </>
-                          )}
-                          {listing.status === 'active' && (
-                            <button onClick={() => setStatus(listing.id, 'inactive')} disabled={busy} className="text-gray-700 hover:underline disabled:opacity-50">
-                              Deactivate
-                            </button>
-                          )}
-                          {listing.status === 'inactive' && (
-                            <button onClick={() => setStatus(listing.id, 'active')} disabled={busy} className="text-green-700 hover:underline disabled:opacity-50">
-                              Reactivate
-                            </button>
-                          )}
-                          {listing.status !== 'sold' && (
-                            <button onClick={() => setConfirmDeleteId(listing.id)} disabled={busy} className="text-red-600 hover:underline disabled:opacity-50">
-                              Delete
-                            </button>
-                          )}
-                        </>
-                      )}
+                    <div className="col-span-2 flex items-center justify-end pr-4">
+                      <ActionMenu
+                        label={`Actions for ${listing.name}`}
+                        disabled={busy}
+                        items={[
+                          { label: 'View listing', onClick: () => router.push(`/sellerDashBoard/${listing.id}`) },
+                          ...(listing.status === 'draft'
+                            ? [
+                                { label: 'Continue editing', onClick: () => router.push(`/sellerDashBoard/create-listing?draft=${listing.id}`) },
+                                { label: 'Publish', onClick: () => publish(listing.id) },
+                              ]
+                            : []),
+                          ...(listing.status === 'active'
+                            ? [{ label: 'Deactivate', onClick: () => setStatus(listing.id, 'inactive') }]
+                            : []),
+                          ...(listing.status === 'inactive'
+                            ? [{ label: 'Reactivate', onClick: () => setStatus(listing.id, 'active') }]
+                            : []),
+                          ...(listing.status !== 'sold'
+                            ? [{ label: 'Delete', danger: true, onClick: () => setConfirmDelete({ id: listing.id, name: listing.name }) }]
+                            : []),
+                        ]}
+                      />
                     </div>
                   </div>
                 ))}
@@ -259,6 +235,27 @@ const ListingsDashboard = () => {
                 onPageChange={setPage}
                 className="px-4 pb-4"
               />
+
+              <Modal isOpen={!!confirmDelete} onClose={() => setConfirmDelete(null)}>
+                <div className="p-8">
+                  <h2 className="text-xl font-semibold text-[#17181a] mb-2">Delete &quot;{confirmDelete?.name}&quot;?</h2>
+                  <p className="text-sm text-[#737780] mb-6">
+                    It will be removed from the marketplace and your listings. Listings with open bids cannot be deleted until those bids are resolved.
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button onClick={() => setConfirmDelete(null)} className="px-4 py-2 border border-[#ececec] rounded-lg text-sm font-medium">
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => confirmDelete && remove(confirmDelete.id)}
+                      disabled={deleteListing.isPending}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      {deleteListing.isPending ? 'Deleting...' : 'Delete listing'}
+                    </button>
+                  </div>
+                </div>
+              </Modal>
             </>
           )}
         </div>
