@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
-import { useListings } from '@/app/hooks/useApi';
+import { useListings, useUpdateListing, usePublishListing, useDeleteListing } from '@/app/hooks/useApi';
 import { useDebouncedValue } from '@/app/hooks/useDebounce';
 import Pagination from '@/app/Components/Pagination';
+import { useToast } from '@/app/Components/Toast';
+import { getErrorMessage } from '@/app/lib/api/client';
 
 type ListingTab = 'active' | 'sold' | 'inactive' | 'draft';
 
@@ -31,6 +33,33 @@ const ListingsDashboard = () => {
   const [page, setPage] = useState(1);
 
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
+  const toast = useToast();
+  const updateListing = useUpdateListing();
+  const publishListing = usePublishListing();
+  const deleteListing = useDeleteListing();
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const busy = updateListing.isPending || publishListing.isPending || deleteListing.isPending;
+
+  const run = async (action: () => Promise<unknown>, success: string, failure: string) => {
+    try {
+      await action();
+      toast.success(success);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, failure));
+    }
+  };
+  const publish = (id: string) =>
+    run(() => publishListing.mutateAsync(id), 'Listing published!', 'Could not publish the listing.');
+  const setStatus = (id: string, status: 'active' | 'inactive') =>
+    run(
+      () => updateListing.mutateAsync({ id, data: { status } }),
+      status === 'inactive' ? 'Listing deactivated.' : 'Listing is live again.',
+      'Could not update the listing.'
+    );
+  const remove = async (id: string) => {
+    await run(() => deleteListing.mutateAsync(id), 'Listing deleted.', 'Could not delete the listing.');
+    setConfirmDeleteId(null);
+  };
 
   // The API filters by status, so each tab maps 1:1 to a backend status.
   const { data: listingsData, isLoading, error } = useListings({
@@ -163,13 +192,55 @@ const ListingsDashboard = () => {
                       </span>
                     </div>
 
-                    <div className="col-span-2 flex items-center">
-                      <button
-                        onClick={() => router.push(`/sellerDashBoard/${listing.id}`)}
-                        className="px-4 py-2 text-[#C9A227] rounded-md font-medium text-sm transition-colors hover:underline"
-                      >
-                        View Listing
-                      </button>
+                    <div className="col-span-2 flex items-center flex-wrap gap-x-3 gap-y-1 text-sm font-medium">
+                      {confirmDeleteId === listing.id ? (
+                        <>
+                          <span className="text-gray-700">Delete?</span>
+                          <button onClick={() => remove(listing.id)} disabled={busy} className="text-red-600 hover:underline disabled:opacity-50">
+                            Yes, delete
+                          </button>
+                          <button onClick={() => setConfirmDeleteId(null)} className="text-gray-500 hover:underline">
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => router.push(`/sellerDashBoard/${listing.id}`)}
+                            className="text-[#C9A227] hover:underline"
+                          >
+                            View
+                          </button>
+                          {listing.status === 'draft' && (
+                            <>
+                              <button
+                                onClick={() => router.push(`/sellerDashBoard/create-listing?draft=${listing.id}`)}
+                                className="text-gray-700 hover:underline"
+                              >
+                                Edit
+                              </button>
+                              <button onClick={() => publish(listing.id)} disabled={busy} className="text-green-700 hover:underline disabled:opacity-50">
+                                Publish
+                              </button>
+                            </>
+                          )}
+                          {listing.status === 'active' && (
+                            <button onClick={() => setStatus(listing.id, 'inactive')} disabled={busy} className="text-gray-700 hover:underline disabled:opacity-50">
+                              Deactivate
+                            </button>
+                          )}
+                          {listing.status === 'inactive' && (
+                            <button onClick={() => setStatus(listing.id, 'active')} disabled={busy} className="text-green-700 hover:underline disabled:opacity-50">
+                              Reactivate
+                            </button>
+                          )}
+                          {listing.status !== 'sold' && (
+                            <button onClick={() => setConfirmDeleteId(listing.id)} disabled={busy} className="text-red-600 hover:underline disabled:opacity-50">
+                              Delete
+                            </button>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}

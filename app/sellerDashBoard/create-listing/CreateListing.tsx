@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import listingsService from "@/app/lib/api/services/listingsService";
+import type { MaterialType, ConditionType } from "@/app/stores/ListingFormStore";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import Sidebar from "./SideBar";
 import BasicDetails from "./steps/BasicDetails";
@@ -12,7 +14,7 @@ import Description from "./steps/Description";
 import PreviewPublish from "./steps/PreviewPublish";
 import StepNavigation from "./StepNavigation";
 import { useListingFormStore } from "@/app/stores/ListingFormStore";
-import { useCreateListing, usePublishListing } from "@/app/hooks/useApi";
+import { useCreateListing, usePublishListing, useUpdateListing } from "@/app/hooks/useApi";
 import { getErrorMessage, getFieldErrors } from "@/app/lib/api/client";
 import { useToast } from "@/app/Components/Toast";
 
@@ -25,10 +27,94 @@ export default function CreateListing() {
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const [publishError, setPublishError] = useState<string | null>(null);
 
-  const { validateStep, getFormData, resetForm } = useListingFormStore();
+  const {
+    validateStep, getFormData, resetForm, draftId, setDraftId,
+    updateBasicDetails, updateImages, updateDescription, updateAdditionalNotes,
+  } = useListingFormStore();
   const createListing = useCreateListing();
+
+  // `?draft=<id>` reopens a saved draft so the seller can finish it (e.g. add
+  // the photos they skipped) and publish.
+  const draftParam = useSearchParams().get("draft");
+  const [loadingDraft, setLoadingDraft] = useState(Boolean(draftParam));
+  useEffect(() => {
+    if (!draftParam) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const l = await listingsService.getListingById(draftParam);
+        if (cancelled) return;
+        if (l.status !== "draft") {
+          toast.error("Only draft listings can be edited here.");
+          router.replace(`/sellerDashBoard/${draftParam}`);
+          return;
+        }
+        resetForm();
+        updateBasicDetails({
+          materialName: l.title,
+          materialType: l.materialType as MaterialType,
+          condition: l.condition as ConditionType,
+          quantity: l.quantityValue ? String(parseFloat(l.quantityValue)) : l.quantity.replace(/[^0-9.]/g, ""),
+          quantityUnit: l.quantityUnit || "kg",
+          basePrice: String(l.price),
+          priceUnit: (l.priceUnit as typeof l.quantityUnit) || "kg",
+          location: l.location,
+        });
+        updateImages(l.images || []);
+        updateDescription(l.description || "");
+        updateAdditionalNotes(l.additionalNotes || "");
+        setDraftId(l.id);
+      } catch (error: unknown) {
+        toast.error(getErrorMessage(error, "Could not load the draft."));
+      } finally {
+        if (!cancelled) setLoadingDraft(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Store setters are stable; this should run once per draft id.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftParam]);
+  const updateListing = useUpdateListing();
   const publishListing = usePublishListing();
-  const isPublishing = createListing.isPending || publishListing.isPending;
+  const [savingDraft, setSavingDraft] = useState(false);
+  const mutating = createListing.isPending || updateListing.isPending || publishListing.isPending;
+  const isPublishing = mutating && !savingDraft;
+
+  // Creates the listing the first time, updates the same draft afterwards, so
+  // saving a draft and then publishing never produces two listings.
+  const persistListing = async (formData: ReturnType<typeof getFormData>) => {
+    if (draftId) {
+      await updateListing.mutateAsync({ id: draftId, data: formData });
+      return draftId;
+    }
+    const result = await createListing.mutateAsync(formData);
+    setDraftId(result.id);
+    return result.id;
+  };
+
+  // Available from step 2 on: only the basic details are required for a draft.
+  const handleSaveDraft = async () => {
+    const errors = validateStep(1);
+    if (Object.keys(errors).length > 0) {
+      setStepErrors(errors);
+      setCurrentStep(1);
+      toast.error("Complete the basic details before saving a draft.");
+      return;
+    }
+    setSavingDraft(true);
+    try {
+      await persistListing(getFormData());
+      toast.success("Saved as a draft. Publish it any time from the Draft tab in your listings.");
+      resetForm();
+      router.push("/sellerDashBoard/Listing");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Could not save the draft. Please try again."));
+    } finally {
+      setSavingDraft(false);
+    }
+  };
 
   // Each step must be complete before moving on. Errors are handed to the
   // step component so they show up next to the offending field.
@@ -77,8 +163,7 @@ export default function CreateListing() {
 
     let createdId: string;
     try {
-      const result = await createListing.mutateAsync(formData);
-      createdId = result.id;
+      createdId = await persistListing(formData);
     } catch (error: unknown) {
       const fieldErrors = getFieldErrors(error);
       const message = getErrorMessage(error, "Failed to create listing. Please try again.");
@@ -152,6 +237,8 @@ export default function CreateListing() {
             onContinue={goNext}
             onPublish={handlePublish}
             isPublishing={isPublishing}
+            onSaveDraft={handleSaveDraft}
+            isSavingDraft={savingDraft}
           />
         </div>
       </header>
@@ -173,7 +260,13 @@ export default function CreateListing() {
                 </button>
               </Link>
 
-              {renderStep()}</div>
+              {loadingDraft ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-[#C9A227]"></div>
+                </div>
+              ) : (
+                renderStep()
+              )}</div>
           </div>
         </div>
       </main>

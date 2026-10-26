@@ -24,8 +24,12 @@ export interface ListingDetail {
     materialType: string;
     condition: string;
     quantity: string;
+    /** Structured quantity, used to reopen a draft in the wizard. */
+    quantityValue?: string | null;
+    quantityUnit?: WeightUnit;
     location: string;
     description: string;
+    additionalNotes?: string | null;
     images: string[];
     status: 'draft' | 'active' | 'inactive' | 'suspended' | 'sold';
     /** Null until the listing is published. */
@@ -71,6 +75,11 @@ export interface CreateListingData {
     images: string[];
 }
 
+/** Sellers may move a listing between draft, active and inactive; other statuses are admin-only. */
+export type SellerListingStatus = 'draft' | 'active' | 'inactive';
+
+export type UpdateListingData = Partial<CreateListingData> & { status?: SellerListingStatus };
+
 export interface CreateListingResponse {
     id: string;
     status: string;
@@ -113,7 +122,7 @@ const listingsService = {
     },
 
     // Update listing
-    async updateListing(id: string, data: Partial<CreateListingData>): Promise<{ id: string; status: string; updatedAt: string }> {
+    async updateListing(id: string, data: UpdateListingData): Promise<{ id: string; status: string; updatedAt: string }> {
         const response = await apiClient.patch(`/seller/listings/${id}`, data);
         return response.data;
     },

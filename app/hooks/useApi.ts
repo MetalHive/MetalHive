@@ -6,7 +6,7 @@ import {
     walletService,
     historyService,
 } from '../lib/api/services';
-import type { CreateListingData } from '../lib/api/services/listingsService';
+import type { UpdateListingData } from '../lib/api/services/listingsService';
 
 // Dashboard hooks
 export const useDashboardStats = (period: '24hours' | '7days' | '2weeks' | '30days' = '30days') => {
@@ -53,11 +53,12 @@ export const useUpdateListing = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: Partial<CreateListingData> }) =>
+        mutationFn: ({ id, data }: { id: string; data: UpdateListingData }) =>
             listingsService.updateListing(id, data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['listing', variables.id] });
             queryClient.invalidateQueries({ queryKey: ['listings'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
         },
     });
 };

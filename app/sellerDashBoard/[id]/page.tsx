@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Share2, Edit3, Clock, ChevronLeft, X } from 'lucide-react';
+import { Share2, Edit3, Clock, ChevronLeft, X, Trash2, Power, Upload } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import listingsService from '@/app/lib/api/services/listingsService';
 import bidsService, { Bid } from '@/app/lib/api/services/bidsService';
-import { useUpdateListing } from '@/app/hooks/useApi';
+import { useUpdateListing, usePublishListing, useDeleteListing } from '@/app/hooks/useApi';
 import { getErrorMessage } from '@/app/lib/api/client';
 import { formatDate } from '@/app/lib/utils/formatters';
 import SideBar from "../../Components/SideBar";
@@ -116,11 +116,15 @@ const ListingDetailPage: React.FC = () => {
   const [showCounterModal, setShowCounterModal] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
   const [isProcessing, setIsProcessing] = useState(false);
 
   const updateListing = useUpdateListing();
+  const publishListing = usePublishListing();
+  const deleteListing = useDeleteListing();
+  const statusBusy = updateListing.isPending || publishListing.isPending || deleteListing.isPending;
 
   // Fetch listing details
   const { data: listing, isLoading, error } = useQuery({
@@ -264,6 +268,42 @@ const ListingDetailPage: React.FC = () => {
   const images = (listing.images || []).filter(Boolean);
   const listedOnLabel = listing.listedOn ? `Listed ${formatDate(listing.listedOn, 'dd/MM/yyyy')}` : 'Not published';
 
+  // Listing lifecycle: publish a draft, pause/resume an active listing, delete.
+  const handleStatusChange = async (status: 'active' | 'inactive') => {
+    try {
+      await updateListing.mutateAsync({ id: listingId, data: { status } });
+      queryClient.invalidateQueries({ queryKey: ['listing-bids', listingId] });
+      queryClient.invalidateQueries({ queryKey: ['bids'] });
+      toast.success(
+        status === 'inactive'
+          ? 'Listing deactivated. Buyers can no longer see it; open bids were released.'
+          : 'Listing is live again.'
+      );
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Could not update the listing status.'));
+    }
+  };
+
+  const handlePublishListing = async () => {
+    try {
+      await publishListing.mutateAsync(listingId);
+      toast.success('Listing published!');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Could not publish the listing.'));
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteListing.mutateAsync(listingId);
+      toast.success('Listing deleted.');
+      router.push('/sellerDashBoard/Listing');
+    } catch (err: unknown) {
+      setShowDeleteModal(false);
+      toast.error(getErrorMessage(err, 'Could not delete the listing.'));
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-[#fafafa]">
       {/* Sidebar */}
@@ -315,6 +355,78 @@ const ListingDetailPage: React.FC = () => {
                 <Edit3 className="w-4 h-4 text-[#737780]" />
                 <span className="text-sm font-medium text-[#17181a]">Edit Listing</span>
               </button>
+              {listing.status === 'draft' && (
+                <button
+                  onClick={() => router.push(`/sellerDashBoard/create-listing?draft=${listingId}`)}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-[#ececec] rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <Edit3 className="w-4 h-4 text-[#737780]" />
+                  <span className="text-sm font-medium text-[#17181a]">Continue editing</span>
+                </button>
+              )}
+              {listing.status === 'draft' && (
+                <button
+                  onClick={handlePublishListing}
+                  disabled={statusBusy}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-[#C9A227] text-white rounded-lg hover:bg-[#b08f20] transition-colors disabled:opacity-50"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span className="text-sm font-medium">Publish</span>
+                </button>
+              )}
+              {listing.status === 'active' && (
+                <button
+                  onClick={() => handleStatusChange('inactive')}
+                  disabled={statusBusy}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-[#ececec] rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  <Power className="w-4 h-4 text-[#737780]" />
+                  <span className="text-sm font-medium text-[#17181a]">Deactivate</span>
+                </button>
+              )}
+              {listing.status === 'inactive' && (
+                <button
+                  onClick={() => handleStatusChange('active')}
+                  disabled={statusBusy}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-[#ececec] rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  <Power className="w-4 h-4 text-green-600" />
+                  <span className="text-sm font-medium text-[#17181a]">Reactivate</span>
+                </button>
+              )}
+              {listing.status !== 'sold' && (
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  disabled={statusBusy}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                  <span className="text-sm font-medium text-red-600">Delete</span>
+                </button>
+              )}
+              <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+                <div className="p-8">
+                  <h2 className="text-xl font-semibold text-[#17181a] mb-2">Delete this listing?</h2>
+                  <p className="text-sm text-[#737780] mb-6">
+                    It will be removed from the marketplace and your listings. Listings with open bids cannot be deleted; decline or resolve those bids first.
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setShowDeleteModal(false)}
+                      className="px-4 py-2 border border-[#ececec] rounded-lg text-sm font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleteListing.isPending}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      {deleteListing.isPending ? 'Deleting...' : 'Delete listing'}
+                    </button>
+                  </div>
+                </div>
+              </Modal>
             </div>
           </div>
         </div>

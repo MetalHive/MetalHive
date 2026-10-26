@@ -25,6 +25,8 @@ interface ListingFormValues {
     // Form state
     currentStep: number;
     isSubmitting: boolean;
+    /** Set once the wizard has saved this listing as a draft, so later saves update it. */
+    draftId: string | null;
 }
 
 interface ListingFormState extends ListingFormValues {
@@ -35,6 +37,7 @@ interface ListingFormState extends ListingFormValues {
     updateAdditionalNotes: (notes: string) => void;
     setCurrentStep: (step: number) => void;
     setIsSubmitting: (isSubmitting: boolean) => void;
+    setDraftId: (draftId: string | null) => void;
     resetForm: () => void;
     getFormData: () => CreateListingData;
     /** Field-level errors for the given wizard step; empty object when valid. */
@@ -58,6 +61,7 @@ const initialState: ListingFormValues = {
     additionalNotes: '',
     currentStep: 1,
     isSubmitting: false,
+    draftId: null,
 };
 
 const isPositiveNumber = (value: string) => {
@@ -79,6 +83,8 @@ export const useListingFormStore = create<ListingFormState>((set, get) => ({
     setCurrentStep: (currentStep) => set({ currentStep }),
 
     setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
+
+    setDraftId: (draftId) => set({ draftId }),
 
     resetForm: () => set(initialState),
 
